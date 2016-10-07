@@ -11,6 +11,17 @@ pio recommendation or pio similar 결과 보려면
 1. 결과로 뜨는 값 역시 food_name이 아니라 food_id값입니다
 
 ### similar
+1. MySimilarProduct 들어가서 pio train - pio deploy해서 서버 켜고
+1. 상세 페이지(ResultActivtyi)에서 similar버튼 누르면 되는데 결과는 마찬가지로 $
+
+
+오늘 중으로 in&output id말고 name으로 바꿀게여 ㅎㅎㅎ
+
+
+
+
+
+
 
 
 Fast, unopinionated, minimalist web framework for [node](http://nodejs.org).
