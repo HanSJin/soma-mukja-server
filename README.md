@@ -1,5 +1,18 @@
 # soma-mukja-server
 
+
+#### map & pio update했어요
+
+pio recommendation or pio similar 결과 보려면
+
+### recommendation
+1. MyECommerceRecommendation 들어가서 pio train - pio deploy해서 서버 켜고
+1. 맨 처음 페이지(UserActivity)에서 user_name(ex:이미정)이 아니라 usercreate하 $
+1. 결과로 뜨는 값 역시 food_name이 아니라 food_id값입니다
+
+### similar
+
+
 Fast, unopinionated, minimalist web framework for [node](http://nodejs.org).
 
   [![NPM Version][npm-image]][npm-url]
