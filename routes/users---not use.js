@@ -1,3 +1,4 @@
+/*
 var mongo = require('mongodb');
 var predictionio = require('predictionio-driver');
 
@@ -55,9 +56,6 @@ exports.addUser = function(req, res) {
     });
 }
  
-/*--------------------------------------------------------------------------------------------------------------------*/
-// Populate database with sample data -- Only used once: the first time the application is started.
-// You'd typically not find this code in a real-life app, since the database would already exist.
 var populateDB = function() {
  
     var users = [
@@ -70,3 +68,4 @@ var populateDB = function() {
     });
  
 };
+*/
