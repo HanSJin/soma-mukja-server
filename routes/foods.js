@@ -1,4 +1,4 @@
-/*
+
 var mongo = require('mongodb');
 var predictionio = require('predictionio-driver');
 var util = require("util");
@@ -27,7 +27,7 @@ var Server = mongo.Server,
     BSON = mongo.BSONPure;
  
 var server = new Server('localhost', 27017, {auto_reconnect: true});
-db = new Db('food', server);
+db = new Db('mukja', server);
  
 db.open(function(err, db) {
     if(!err) {
@@ -261,4 +261,3 @@ var populateDB = function() {
     });
  
 };
-*/

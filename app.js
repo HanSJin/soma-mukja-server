@@ -1,6 +1,11 @@
 const uri = require('./dbURI.json');
+const imageRepoPath = './public/images';
 
 const express = require('express');
+const path = require('path');
+const app = express();
+
+
 const foods = require('./routes/foods');
 // const users = require('./routes/users');
 const bodyParser  = require('body-parser');
@@ -9,7 +14,6 @@ const logger = require('morgan');
 const cookieParser = require('cookie-parser');
 const message = require('./message');
 
-const app = express();
 
 const mongoose = require('mongoose');
 var db = mongoose.connection;
@@ -21,6 +25,7 @@ db = mongoose.createConnection(uri);
 
 
 
+app.use(express.static(path.join(__dirname, 'public')));  // 저장한 이미지를 배포하기 위함
 app.use(logger('common'));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
@@ -42,6 +47,8 @@ app.get('/pio/recommendation/:user',foods.recommendationResult);
 
 // REAL API -- !!
 app.post('/sign/in', user.signIn);
+app.post('/sign/up', user.signUp);
+app.post('/users/:user_id/edit/aboutMe', user.updateAboutme);
 
 
 // catch 404 and forward to error handler
@@ -78,4 +85,4 @@ app.use(function (err, req, res, next) {
 
 module.exports = app;
 
-app.listen(8888);
+app.listen(8887);
