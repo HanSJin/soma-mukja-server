@@ -1,8 +1,10 @@
 
+const message = require('../message');
 var mongo = require('mongodb');
 var predictionio = require('predictionio-driver');
 var util = require("util");
 fs = require('fs');
+var ObjectId = require('mongodb').ObjectID;
 
 // predicitonio
 var eventsUrl= process.env.PIOEventUrl || 'http://52.192.137.69';
@@ -32,13 +34,7 @@ db = new Db('mukja', server);
  
 db.open(function(err, db) {
     if(!err) {
-        console.log("Connected to 'food' database");
-        db.collection('food', {safe:true}, function(err, collection) {
-            if (err) {
-                console.log("The 'food' collection doesn't exist. Creating it with sample data...");
-                populateDB();
-            }
-        });
+        console.log("Connected to 'user' database");
     }
 });
 
@@ -157,27 +153,6 @@ exports.buyitem = function(req,res){
         res.send({result:"fail", message:"exception."});
     });
 };
-
-//+predictionio user view item
-exports.findById = function(req, res) {
-    var id = req.params._id;
-    console.log('Retrieving foods: ' + id);
-    db.collection('food', function(err, collection) {
-	    collection.findOne({'_id':new require('mongodb').ObjectID(id)}, function(err, item) {
-            client.createAction({
-                event: 'view',
-                uid: req.params.user,
-                iid: item._id,
-                eventTime: new Date().toISOString()
-            }).then(function(result) {
-            	console.log("view"+JSON.stringify(result)); // Prints "{eventId: 'something'}" 
-            }).catch(function(err) {
-                console.error(err); // Something went wrong 
-            });
-            res.send(item);
-        });
-    });
-};
  
 exports.findAll = function(req, res) {
     db.collection('food', function(err, collection) {
@@ -186,21 +161,63 @@ exports.findAll = function(req, res) {
         });
     });
 };
+
+
+exports.getFeeds = function(req, res) {
+	if (!req.params.uid || !req.params.page)
+		return res.status(message.code(3)).json(message.json(3));
+		
+    db.collection('food', function(err, collection) {
+        collection.find().limit(10).skip((req.params.page-1)*10).toArray(function(err, newfeeds) {
+	        
+			return res.status(message.code(0)).json(newfeeds);
+        });
+    });
+};
  
 exports.addFood = function(req, res) {
-    var food = req.body;
-    console.log('Adding food: ' + JSON.stringify(food));
+	var now = new Date();
+	var name = req.body.name;
+	var taste = req.body.taste;
+	var cooking = req.body.cooking;
+	var country = req.body.country;
+	var ingredient = req.body.ingredient;
+	var author = req.body.author;
+	var image_url = req.body.image_url;
+	var list = new Array();
     db.collection('food', function(err, collection) {
-        collection.insert(food, {safe:true}, function(err, result) {
-            if (err) {
-                res.send({'error':'An error has occurred'});
-            } else {
-                console.log('Success: ' + JSON.stringify(result[0]));
-                res.send(result[0]);
-            }
+        collection.insert({
+	        update_date : now,
+			create_date : now,
+			name : name,
+			taste : taste,
+			cooking : cooking,
+			country : country,
+			ingredient : ingredient,
+			image_url : "",
+			view_cnt : 0,
+			like_cnt : 0,
+			like_person : list,
+			rate_cnt : 0,
+			rate_person : list,
+			author : author,
+			rate_distribution : list
+        }, function(err, food) {
+			if(err){
+				res.status(message.code(1)).json(message.json(1));    //유저 데이터 생성 성공! 코드 몇번?
+			}		   
+			res.send(food.ops[0]);
         });
     });
 }
+
+exports.report = function(req, res) {
+	if (!req.params.uid || !req.params.food_id)
+		return res.status(message.code(3)).json(message.json(3));
+	return res.status(message.code(0)).json(message.json(0));
+};
+
+
  
 exports.updateFood = function(req, res) {
     var id = req.params.id;

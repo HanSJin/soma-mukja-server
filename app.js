@@ -48,9 +48,18 @@ app.get('/pio/recommendation/:user',foods.recommendationResult);
 // REAL API -- !!
 app.post('/sign/in', user.signIn);
 app.post('/sign/up', user.signUp);
+
+app.get('/feeds/:uid/:page', foods.getFeeds);
+app.get('/report/:uid/:food_id', foods.report);
+app.get('/foods/:keyword', foods.getSearchResult);
+app.post('/foods/post', foods.uploadFood);
+
+
+
+
 app.post('/users/:user_id/edit/aboutMe', user.updateAboutme);
 app.get('/images/food/:filename', foods.getImage);
-app.get('/foods/:keyword', foods.getSearchResult)
+app.get('/foods/:keyword', foods.getSearchResult);
 
 
 
