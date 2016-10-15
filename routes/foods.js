@@ -67,11 +67,9 @@ exports.getRecommand = function(req, res) {
 
 
 exports.getCategory = function(req, res) {		
-    db.collection('category', function(err, collection) {
-	    collection.find( { }, function(err, category) {
-// 	        delete _id;
-			return res.status(message.code(0)).json(category);
-        });
+	db.collection('category').findOne({}{_id},function(err,category){
+		delete _id;
+		return res.status(message.code(0)).json(category);
     });
 };
 
