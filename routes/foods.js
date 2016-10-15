@@ -2,6 +2,7 @@
 var mongo = require('mongodb');
 var predictionio = require('predictionio-driver');
 var util = require("util");
+fs = require('fs');
 
 // predicitonio
 var eventsUrl= process.env.PIOEventUrl || 'http://52.192.137.69';
@@ -261,7 +262,11 @@ var populateDB = function() {
     });
  
 };
-<<<<<<< HEAD
-*/
-=======
->>>>>>> 4bcec1a9dbe5de39784ab5c93bf503174b2631ad
+
+exports.getImage = function(req, res) {
+    var filename = req.params.filename;
+    console.log('get Image of food: ' + filename);
+    var img = fs.readFileSync('./images/food/' + filename);
+     res.writeHead(200, {'Content-Type': 'image/gif' });
+     res.end(img, 'binary');
+};
