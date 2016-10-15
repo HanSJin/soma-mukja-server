@@ -2,6 +2,7 @@
 var mongo = require('mongodb');
 var predictionio = require('predictionio-driver');
 var util = require("util");
+fs = require('fs');
 
 // predicitonio
 var eventsUrl= process.env.PIOEventUrl || 'http://52.192.137.69';
@@ -260,4 +261,12 @@ var populateDB = function() {
         collection.insert(foods, {safe:true}, function(err, result) {});
     });
  
+};
+
+exports.getImage = function(req, res) {
+    var filename = req.params.filename;
+    console.log('get Image of food: ' + filename);
+    var img = fs.readFileSync('./images/food/' + filename);
+     res.writeHead(200, {'Content-Type': 'image/gif' });
+     res.end(img, 'binary');
 };

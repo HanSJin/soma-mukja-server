@@ -48,8 +48,8 @@ app.get('/pio/recommendation/:user',foods.recommendationResult);
 // REAL API -- !!
 app.post('/sign/in', user.signIn);
 app.post('/sign/up', user.signUp);
-
 app.post('/users/:user_id/edit/aboutMe', user.updateAboutme);
+app.get('/images/food/:filename', foods.getImage);
 
 
 
@@ -87,4 +87,4 @@ app.use(function (err, req, res, next) {
 
 module.exports = app;
 
-app.listen(8887);
+app.listen(8888);
