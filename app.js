@@ -62,7 +62,7 @@ app.post('/upload/:image_url', foods.uploadImage);
 app.get('/foods/:keyword', foods.getSearchResult);
 app.post('/users/:user_id/edit/aboutMe', user.updateAboutme);
 app.get('/images/food/:filename', foods.getImage);
-app.get('/foods/:keyword', foods.getSearchResult);
+app.get('/:uid/foods', foods.getFoodsForUser);
 
 
 
@@ -100,4 +100,4 @@ app.use(function (err, req, res, next) {
 
 module.exports = app;
 
-app.listen(8888);
+app.listen(8887);
