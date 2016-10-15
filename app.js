@@ -32,9 +32,9 @@ app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 
 /// TEST API 여깃는건 샘플이었지?
+/*
 app.get('/foods', foods.findAll);
 app.get('/foods/:_id/:user', foods.findById);
-app.post('/foods', foods.addFood);
 app.put('/foods/:_id', foods.updateFood);
 app.delete('/foods/:_id', foods.deleteFood);
 // app.post('/users', users.addUser);
@@ -42,6 +42,7 @@ app.get('/pio/create_items',foods.addAllitem);
 app.get('/pio/buy/:user/:food',foods.buyitem);
 app.get('/pio/similar/:food',foods.similarResult);
 app.get('/pio/recommendation/:user',foods.recommendationResult);
+*/
 
 
 
@@ -49,14 +50,16 @@ app.get('/pio/recommendation/:user',foods.recommendationResult);
 app.post('/sign/in', user.signIn);
 app.post('/sign/up', user.signUp);
 
+// SJ
 app.get('/feeds/:uid/:page', foods.getFeeds);
 app.get('/report/:uid/:food_id', foods.report);
+app.post('/food', foods.addFood);
+app.post('/upload/:image_url', foods.uploadImage);
+
+
+
+
 app.get('/foods/:keyword', foods.getSearchResult);
-app.post('/foods/post', foods.uploadFood);
-
-
-
-
 app.post('/users/:user_id/edit/aboutMe', user.updateAboutme);
 app.get('/images/food/:filename', foods.getImage);
 app.get('/foods/:keyword', foods.getSearchResult);

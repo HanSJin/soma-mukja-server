@@ -6,6 +6,9 @@ var util = require("util");
 fs = require('fs');
 var ObjectId = require('mongodb').ObjectID;
 
+var multer = require('multer');
+var multiparty = require('multiparty');
+
 // predicitonio
 var eventsUrl= process.env.PIOEventUrl || 'http://52.192.137.69';
 var eventsPort= process.env.PIOEventPort || '7070';
@@ -38,122 +41,6 @@ db.open(function(err, db) {
     }
 });
 
-//category -> one list
-var getlist = function(food){
-    var categorys = [food.taste,food.country,food.cooking,food.ingredient];
-    var list = new Array;
-    var su = 0;
-    for(var i =0; i<categorys.length; i++){
-            categorys[i].forEach(function(cat){
-                    list[su++]=cat;
-            });
-    }
-    return list;
-};
-
-//유저 데이터 생성
-var initdata = function(su){
-    var list = new Array;
-    for(var i=0;i<su;i++){
-        list[i]= util.format("u%s",i);
-    }
-    return list;
-};
-
-//predictionio createitems ( all )
-exports.addAllitem = function(req, res) {
-    db.collection('food', function(err, collection) {
-        collection.find().toArray(function(err, items) {
-            allfoods = items;
-            
-            items.forEach(function(food){
-                console.log('food : ' + getlist(food));
-
-				//item 생성
-                client.createItem({
-                    iid: food._id,
-                    properties: { categories : getlist(food) }, 
-                    eventTime: new Date().toISOString()
-                }).then(function(result) {
-                    console.log("create item"+JSON.stringify(result)); // Prints "{eventId: 'something'}" 
-                }).catch(function(err) {
-                    console.error(err); // Something went wrong 
-                });
-        	});
-        	
-		    //유저 생성
-		    initdata(30).forEach(function(name){
-		        var rn = Math.floor(Math.random() * 19);
-	            client.createUser({uid: name}, function (err,result_pio) {
-	                if (!err) console.log('predictionIO createUser :'+JSON.stringify(result_pio));
-	            });
-	            
-                client.createAction({
-                    event: 'buy',
-                    uid: name,
-                    iid: items[rn]._id,
-                    eventTime: new Date().toISOString()
-                }).then(function(result) {
-                    console.log("buy"+JSON.stringify(result)); // Prints "{eventId: 'something'}" 
-                }).catch(function(err) {
-                    console.error(err); // Something went wrong 
-                });
-
-                client.createAction({
-                    event: 'view',
-                    uid: name,
-                    iid: items[rn]._id,
-                    eventTime: new Date().toISOString()
-                }).then(function(result) {
-                        console.log("buy"+JSON.stringify(result)); // Prints "{eventId: 'something'}" 
-                }).catch(function(err) {
-                    console.error(err); // Something went wrong 
-                });
-        	});
-    	});
-    });
-    res.send({result:"success"});
-};
-
-//predictionio similar result
-exports.similarResult = function(req,res){
-    pio.sendQuery({items: [req.params.food], num: 1}, function (err, result) {
-        if (err) {
-        	res.send(err);
-        }
-        console.log("similar result:"+JSON.stringify(result));
-        res.send(result.itemScores);
-	});
-};
-
-//predictionio recommendation result
-exports.recommendationResult = function(req,res){
-    pio.sendQuery({user : req.params.user, num: 3}, function (err, result) {
-        if (err) {
-            console.log(err);
-            return;
-        }
-        console.log("recommedation result:"+JSON.stringify(result));
-        res.send(result.itemScores);
-	});
-};
-
-//predictionio user buy item
-exports.buyitem = function(req,res){
-    client.createAction({
-        event: 'buy',
-        uid: req.params.user,
-        iid: req.params.food,
-        eventTime: new Date().toISOString()
-    }).then(function(result) {
-        console.log("LOG[buy] : "+JSON.stringify(result)); // Prints "{eventId: 'something'}" 
-        res.send({result:"success"});
-    }).catch(function(err) {
-        console.error(err); // Something went wrong 
-        res.send({result:"fail", message:"exception."});
-    });
-};
- 
 exports.findAll = function(req, res) {
     db.collection('food', function(err, collection) {
         collection.find().toArray(function(err, items) {
@@ -162,14 +49,12 @@ exports.findAll = function(req, res) {
     });
 };
 
-
 exports.getFeeds = function(req, res) {
 	if (!req.params.uid || !req.params.page)
 		return res.status(message.code(3)).json(message.json(3));
 		
     db.collection('food', function(err, collection) {
-        collection.find().limit(10).skip((req.params.page-1)*10).toArray(function(err, newfeeds) {
-	        
+        collection.find().sort({ create_date : -1 }).limit(10).skip((req.params.page-1)*10).toArray(function(err, newfeeds) {
 			return res.status(message.code(0)).json(newfeeds);
         });
     });
@@ -194,7 +79,7 @@ exports.addFood = function(req, res) {
 			cooking : cooking,
 			country : country,
 			ingredient : ingredient,
-			image_url : "",
+			image_url : image_url,
 			view_cnt : 0,
 			like_cnt : 0,
 			like_person : list,
@@ -218,74 +103,55 @@ exports.report = function(req, res) {
 };
 
 
- 
-exports.updateFood = function(req, res) {
-    var id = req.params.id;
-    var food = req.body;
-    console.log('Updating food: ' + id);
-    console.log(JSON.stringify(food));
-    db.collection('food', function(err, collection) {
-        collection.update({'_id':new BSON.ObjectID(id)}, food, {safe:true}, function(err, result) {
-            if (err) {
-                console.log('Error updating food: ' + err);
-                res.send({'error':'An error has occurred'});
-            } else {
-                console.log('' + result + ' document(s) updated');
-                res.send(food);
-            }
-        });
-    });
-}
- 
-exports.deleteFood = function(req, res) {
-    var id = req.params.id;
-    console.log('Deleting food: ' + id);
-    db.collection('food', function(err, collection) {
-        collection.remove({'_id':new BSON.ObjectID(id)}, {safe:true}, function(err, result) {
-            if (err) {
-                res.send({'error':'An error has occurred - ' + err});
-            } else {
-                console.log('' + result + ' document(s) deleted');
-                res.send(req.body);
-            }
-        });
-    });
-}
- 
-var populateDB = function() {
- 
-    var foods = [
-    {
-        name: "CHATEAU DE SAINT COSME",
-        year: "2009",
-        grapes: "Grenache / Syrah",
-        country: "France",
-        region: "Southern Rhone",
-        description: "The aromas of fruit and spice...",
-        picture: "saint_cosme.jpg"
-    },
-    {
-        name: "LAN RIOJA CRIANZA",
-        year: "2006",
-        grapes: "Tempranillo",
-        country: "Spain",
-        region: "Rioja",
-        description: "A resurgence of interest in boutique vineyards...",
-        picture: "lan_rioja.jpg"
-    }];
- 
-    db.collection('food', function(err, collection) {
-        collection.insert(foods, {safe:true}, function(err, result) {});
-    });
- 
-};
-
 exports.getImage = function(req, res) {
     var filename = req.params.filename;
     console.log('get Image of food: ' + filename);
     var img = fs.readFileSync('./images/food/' + filename);
      res.writeHead(200, {'Content-Type': 'image/gif' });
      res.end(img, 'binary');
+};
+
+// image upload(success)
+exports.uploadImage = function(req, res) {
+    var form = new multiparty.Form();
+    
+      // file upload handling
+      form.on('part',function(part){
+           var filename = req.params.image_url+".png";
+           var size;
+           if (part.filename) {
+                 size = part.byteCount;
+           }else{
+                 part.resume();
+          
+           }    
+ 
+           console.log("Write Streaming file :"+filename);
+           var writeStream = fs.createWriteStream('/home/ec2-user/nodecellar2/soma-mukja-server/public/images/'+filename);
+           writeStream.filename = filename;
+           part.pipe(writeStream);
+ 
+           part.on('data',function(chunk){
+                 console.log(filename+' read '+chunk.length + 'bytes');
+           });
+          
+           part.on('end',function(){
+                 console.log(filename+' Part read complete');
+                 writeStream.end();
+           });
+      });
+ 
+      // all uploads are completed
+      form.on('close',function(){
+           res.status(200).send('Upload complete');
+      });
+     
+      // track progress
+      form.on('progress',function(byteRead,byteExpected){
+           console.log(' Reading total  '+byteRead+'/'+byteExpected);
+      });
+     
+      form.parse(req);
 };
 
 exports.getSearchResult = function(req, res){
