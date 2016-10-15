@@ -2,6 +2,9 @@
 const message = require('../message');
 var mongo = require('mongodb');
 const crypto = require('crypto');
+require('date-utils');
+
+
 
 var Server = mongo.Server,
     Db = mongo.Db,
@@ -27,14 +30,51 @@ db.open(function(err, db) {
 });
 
 exports.signIn = function(req, res) {
-  	if (!req.body.social_id)
-    	return res.status(message.code(3)).json(message.json(3));   
     db.collection('user', function(err, collection) {
-	    collection.findOne( { social_id : req.body.social_id }, function(err, user) {
-			if (!user) return res.status(message.code(5)).json(message.json(5, err));
-            res.send(user);
-        });
-    });
+	    var dt = new Date();
+	    dt.setHours(dt.getHours() + 9);  
+		var d = dt.toFormat('YYYY-MM-DD HH24:MI:SS');
+		
+		//get ip Adress - start
+		var os = require('os');
+		var ifaces = os.networkInterfaces();
+		var ip;
+		
+		Object.keys(ifaces).forEach(function (ifname) {
+		  var alias = 0;
+		
+		  ifaces[ifname].forEach(function (iface) {
+		    if ('IPv4' !== iface.family || iface.internal !== false) {
+		      // skip over internal (i.e. 127.0.0.1) and non-ipv4 addresses
+		      return;
+		    }
+		
+		    if (alias >= 1) {
+		      // this single interface has multiple ipv4 addresses
+		      console.log(ifname + ':' + alias, iface.address);
+		    } else {
+		      // this interface has only one ipv4 adress
+		      console.log(ifname, iface.address);
+		    }
+		    ip = iface.address;
+		    ++alias;
+		  });
+		});
+		//get ip address - end
+		
+	    collection.update( { social_id : req.body.user_id }, 
+	    {$set:{login_last_date:d, 
+		    access_last_date:d, 
+		    access_ip:ip},
+		 $inc:{login_cnt:1,  access_cnt:1}
+		}, 
+	    function(err, user) {
+			if(err){
+				console.log(err);
+			}
+			res.status(message.code(0)).json(message.json(0));
+		});
+	});
 };
 
 exports.signUp = function(req, res) {
@@ -86,15 +126,20 @@ exports.signUp = function(req, res) {
 };
 
 exports.updateAboutme = function (req, res){
+	var dt = new Date();
+	dt.setHours(dt.getHours() + 9);  
+	var d = dt.toFormat('YYYY-MM-DD HH24:MI:SS');
+		
 	db.collection('user', function(err, collection) {
 	    collection.update( { social_id : req.params.user_id }, 
-	    {$set:{about_me:req.body.about_me}}, 
+	    {$set:{about_me:req.body.about_me, update_date:d}}, 
 	    function(err, user) {
 			if(err){
 				console.log(err);
 			}
 			res.status(message.code(0)).json(message.json(0));
-	})});
+		})
+	});
 };
 
 
