@@ -37,7 +37,7 @@ db = new Db('mukja', server);
  
 db.open(function(err, db) {
     if(!err) {
-        console.log("Connected to 'user' database");
+        console.log("Connected to 'foods' database");
     }
 });
 
@@ -192,4 +192,14 @@ exports.getSearchResult = function(req, res){
 			}
 		});
 	});
+};
+
+exports.getFoodsForUser = function(req, res){
+	var uid = req.params.uid;
+	//나중에 각각 유저마다 음식평가 화면에 음식 목록들 다 다르게 주기위해서(큐레이션) 일단 user_id를 받아오는 것만.
+    db.collection('food', function(err, collection) {
+        collection.find().toArray(function(err, items) {
+            res.send(items);
+        });
+    });
 };
