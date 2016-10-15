@@ -49,6 +49,33 @@ exports.findAll = function(req, res) {
     });
 };
 
+
+
+exports.getRecommand = function(req, res) {
+	if (!req.params.uid)
+		return res.status(message.code(3)).json(message.json(3));
+		
+	var category = req.body.category;
+	// NEED SOME LOGICS FOR CURATION.
+		
+    db.collection('food', function(err, collection) {
+        collection.find().sort({ create_date : -1 }).limit(10).skip((req.params.page-1)*10).toArray(function(err, newfeeds) {
+			return res.status(message.code(0)).json(newfeeds);
+        });
+    });
+};
+
+
+exports.getCategory = function(req, res) {		
+    db.collection('category', function(err, collection) {
+	    collection.find( { }, function(err, category) {
+// 	        delete _id;
+			return res.status(message.code(0)).json(category);
+        });
+    });
+};
+
+
 exports.getFeeds = function(req, res) {
 	if (!req.params.uid || !req.params.page)
 		return res.status(message.code(3)).json(message.json(3));

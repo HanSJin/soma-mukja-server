@@ -50,12 +50,25 @@ app.get('/pio/recommendation/:user',foods.recommendationResult);
 app.post('/sign/in', user.signIn);
 app.post('/sign/up', user.signUp);
 
-// SJ
-app.get('/feeds/:uid/:page', foods.getFeeds);
-app.get('/report/:uid/:food_id', foods.report);
-app.post('/food', foods.addFood);
-app.post('/upload/:image_url', foods.uploadImage);
+//  SJ
 
+// 탭 1 추천 받기
+app.post('/recommand/:uid', foods.getRecommand);
+
+// 탭 1 추천 받기
+app.get('/category', foods.getCategory);
+
+// 탭 2 피드 받기
+app.get('/feeds/:uid/:page', foods.getFeeds);
+
+// 탭 2 부적절 컨텐츠
+app.get('/report/:uid/:food_id', foods.report);
+
+// 탭 2 음식 업로드
+app.post('/food', foods.addFood);
+
+// 탭 2 음식 업로드 (이미지)
+app.post('/upload/:image_url', foods.uploadImage);
 
 
 
