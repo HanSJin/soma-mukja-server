@@ -261,7 +261,3 @@ var populateDB = function() {
     });
  
 };
-<<<<<<< HEAD
-*/
-=======
->>>>>>> 4bcec1a9dbe5de39784ab5c93bf503174b2631ad

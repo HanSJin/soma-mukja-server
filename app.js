@@ -48,10 +48,9 @@ app.get('/pio/recommendation/:user',foods.recommendationResult);
 // REAL API -- !!
 app.post('/sign/in', user.signIn);
 app.post('/sign/up', user.signUp);
-<<<<<<< HEAD
-=======
+
 app.post('/users/:user_id/edit/aboutMe', user.updateAboutme);
->>>>>>> 4bcec1a9dbe5de39784ab5c93bf503174b2631ad
+
 
 
 // catch 404 and forward to error handler
