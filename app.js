@@ -50,6 +50,7 @@ app.post('/sign/in', user.signIn);
 app.post('/sign/up', user.signUp);
 app.post('/users/:user_id/edit/aboutMe', user.updateAboutme);
 app.get('/images/food/:filename', foods.getImage);
+app.get('/foods/:keyword', foods.getSearchResult)
 
 
 

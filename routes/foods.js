@@ -270,3 +270,18 @@ exports.getImage = function(req, res) {
      res.writeHead(200, {'Content-Type': 'image/gif' });
      res.end(img, 'binary');
 };
+
+exports.getSearchResult = function(req, res){
+	var keyword = req.params.keyword;
+	console.log('get Search Result : ' + keyword);
+	db.collection('food', function(err, collection){
+		collection.find({name : {$regex:keyword}}).toArray(function(err, foods){
+			var len = foods.length;
+			if(len == 0){
+				res.send("No result");
+			}else{
+				res.send(foods);
+			}
+		});
+	});
+};
