@@ -66,6 +66,9 @@ app.get('/category', foods.getCategory);
 // 음식 - 먹고싶어요
 app.post('/like/:uid/:food_id', foods.like);
 
+// 음식 - 평가하기
+app.post('/rate/:uid/:food_id', foods.rate);
+
 // 음식 - 해당 음식을 먹고싶어한 사람들
 app.get('/like/:food_id/page', foods.likePersons);
 

@@ -58,10 +58,16 @@ exports.getRecommand = function(req, res) {
 		
 	var category = req.body.category;
 	// NEED SOME LOGICS FOR CURATION.
-		
-    db.collection('food').find().sort({ create_date : -1 }).limit(10).skip((req.params.page-1)*10).toArray(function(err, newfeeds) {
-		return res.status(message.code(0)).json(newfeeds);
-    });
+	
+	if(req.body.taste.length == 0 && req.body.country.length == 0 && req.body.cooking.length == 0){	
+	    db.collection('food').find().limit(10).skip((req.params.page-1)*10).toArray(function(err, newfeeds) {
+			return res.status(message.code(0)).json(newfeeds);
+		});	
+    }else{
+	    db.collection('food').find({$or: [{ taste : { $in: req.body.taste } },{ country : { $in: req.body.country } },{ cooking : { $in: req.body.cooking } }]}).sort({ create_date : -1 }).limit(10).skip((req.params.page-1)*10).toArray(function(err, newfeeds) {
+			return res.status(message.code(0)).json(newfeeds);
+	    });	
+	}
 };
 
 
@@ -227,6 +233,49 @@ exports.like = function(req, res) {
     });
 };
 
+exports.rate = function(req, res) {
+	if (!req.params.uid || !req.params.food_id)
+		return res.status(message.code(3)).json(message.json(3));
+		
+	db.collection('food').findOne( { _id : ObjectId(req.params.food_id) }, function(err,food){
+		if (err) res.status(message.code(1)).json(message.json(1));
+		if (!food) res.status(message.code(1)).json(message.json(1));
+		
+		console.log(req.body.rate_person);
+		var new_rate_cnt = food.rate_cnt;
+		var new_rate_person = req.body.rate_person;
+		var new_rate_distribution = food.rate_distribution;
+		
+		var israted = false;
+		for (var idx=1; idx<new_rate_person.length; idx++) {
+			if (new_rate_person[idx].user_id == req.params.uid) {
+				israted = true;
+				var i = (new_rate_person[idx].rate_num)*2-1;
+				new_rate_distribution[i] -= 1;
+				break;
+			}
+		}
+		
+		if (!israted) {
+			new_rate_cnt++;
+		}
+		
+		var i = new_rate_person[0].rate_num*2-1;
+		new_rate_distribution[i] += 1;
+				
+		db.collection('food').update( 
+			{ _id: ObjectId(req.params.food_id) }, 
+			{ $set: {rate_cnt : new_rate_cnt, rate_person : new_rate_person, rate_distribution : new_rate_distribution } },
+			function(err, update) {
+				db.collection('food').findOne( { _id : ObjectId(req.params.food_id) }, function(err,update_food){
+					if (err) res.status(message.code(1)).json(message.json(1));
+					if (!update_food) res.status(message.code(1)).json(message.json(1));
+					return res.status(message.code(0)).json(update_food);
+				});
+			}
+		);	
+    });
+};
 
 exports.likePersons = function(req, res) {
 	if (!req.params.food_id)
