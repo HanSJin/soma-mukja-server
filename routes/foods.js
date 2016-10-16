@@ -5,7 +5,6 @@ var predictionio = require('predictionio-driver');
 var util = require("util");
 fs = require('fs');
 var ObjectId = require('mongodb').ObjectID;
-
 var multer = require('multer');
 var multiparty = require('multiparty');
 
@@ -125,6 +124,47 @@ exports.report = function(req, res) {
 	if (!req.params.uid || !req.params.food_id)
 		return res.status(message.code(3)).json(message.json(3));
 	return res.status(message.code(0)).json(message.json(0));
+};
+
+
+exports.like = function(req, res) {
+	if (!req.params.uid || !req.params.food_id)
+		return res.status(message.code(3)).json(message.json(3));
+		
+	db.collection('food').findOne( { _id : ObjectId(req.params.food_id) }, function(err,food){
+		if (err) res.status(message.code(1)).json(message.json(1));
+		if (!food) res.status(message.code(1)).json(message.json(1));
+		
+		var new_like_cnt = food.like_cnt;
+		var new_like_person = food.like_person;
+		
+		var isliked = false;
+		for (var idx=0; idx<new_like_person.length; idx) {
+			if (new_like_person[idx] == req.params.uid) {
+				isliked = true;
+				new_like_cnt--;
+				new_like_person.splice(idx, 1);
+				break;
+			}
+		}
+		
+		// 좋아요
+		if (!isliked) {
+			new_like_cnt++;
+			new_like_person.push(req.params.uid);
+		}
+		db.collection('food').update( 
+			{ _id: ObjectId(req.params.food_id) }, 
+			{ $set: {like_cnt : new_like_cnt, like_person : new_like_person } },
+			function(err, update) {
+				db.collection('food').findOne( { _id : ObjectId(req.params.food_id) }, function(err,update_food){
+					if (err) res.status(message.code(1)).json(message.json(1));
+					if (!update_food) res.status(message.code(1)).json(message.json(1));
+					return res.status(message.code(0)).json(update_food);
+				});
+			}
+		);	
+    });
 };
 
 

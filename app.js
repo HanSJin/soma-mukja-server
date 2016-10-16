@@ -58,6 +58,9 @@ app.post('/recommand/:uid', foods.getRecommand);
 // 탭 1 추천 받기
 app.get('/category', foods.getCategory);
 
+// 음식 - 먹고싶어요
+app.post('/like/:uid/:food_id', foods.like);
+
 // 탭 2 피드 받기
 app.get('/feeds/:uid/:page', foods.getFeeds);
 
