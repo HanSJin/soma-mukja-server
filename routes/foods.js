@@ -252,6 +252,7 @@ exports.rate = function(req, res) {
 				israted = true;
 				var i = (new_rate_person[idx].rate_num)*2-1;
 				new_rate_distribution[i] -= 1;
+				new_rate_person.splice(idx, 1);
 				break;
 			}
 		}
