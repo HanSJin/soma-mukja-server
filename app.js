@@ -52,6 +52,9 @@ app.post('/sign/up', user.signUp);
 
 //  SJ
 
+// 탭 2 음식 업로드
+app.get('/food/:food_id', foods.getFood);
+
 // 탭 1 추천 받기
 app.post('/recommand/:uid', foods.getRecommand);
 
@@ -61,6 +64,9 @@ app.get('/category', foods.getCategory);
 // 음식 - 먹고싶어요
 app.post('/like/:uid/:food_id', foods.like);
 
+// 음식 - 해당 음식을 먹고싶어한 사람들
+app.get('/like/:food_id/page', foods.likePersons);
+
 // 탭 2 피드 받기
 app.get('/feeds/:uid/:page', foods.getFeeds);
 
@@ -68,11 +74,19 @@ app.get('/feeds/:uid/:page', foods.getFeeds);
 app.get('/report/:uid/:food_id', foods.report);
 
 // 탭 2 음식 업로드
-app.post('/food', foods.addFood);
+app.post('/food/post', foods.addFood);
 
 // 탭 2 음식 업로드 (이미지)
-app.post('/upload/:image_url', foods.uploadImage);
+app.post('/upload/food/:image_url', foods.uploadImage);
 
+// 평가하기 - 평가 음식 리스트
+app.get('/rank/:uid/:page', foods.rankList);
+
+// 평가하기 - 음식 평가하기
+app.post('/rank/:uid/:food_id/:rate', foods.rankPost);
+
+// 탭 5 내가 좋아한 음식
+app.get('/users/:uid/mylist', foods.myFoodList);
 
 
 app.get('/foods/:keyword', foods.getSearchResult);

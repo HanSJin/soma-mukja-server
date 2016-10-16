@@ -40,15 +40,17 @@ db.open(function(err, db) {
     }
 });
 
-exports.findAll = function(req, res) {
-    db.collection('food', function(err, collection) {
-        collection.find().toArray(function(err, items) {
-            res.send(items);
-        });
-    });
+
+exports.getFood = function(req, res) {
+	if (!req.params.food_id)
+		return res.status(message.code(3)).json(message.json(3));
+	
+	db.collection('food').findOne( { _id : ObjectId(req.params.food_id) }, function(err,food){
+		if (err) res.status(message.code(1)).json(message.json(1));
+		if (!food) res.status(message.code(1)).json(message.json(1));
+		return res.status(message.code(0)).json(food);
+	});
 };
-
-
 
 exports.getRecommand = function(req, res) {
 	if (!req.params.uid)
@@ -57,10 +59,8 @@ exports.getRecommand = function(req, res) {
 	var category = req.body.category;
 	// NEED SOME LOGICS FOR CURATION.
 		
-    db.collection('food', function(err, collection) {
-        collection.find().sort({ create_date : -1 }).limit(10).skip((req.params.page-1)*10).toArray(function(err, newfeeds) {
-			return res.status(message.code(0)).json(newfeeds);
-        });
+    db.collection('food').find().sort({ create_date : -1 }).limit(10).skip((req.params.page-1)*10).toArray(function(err, newfeeds) {
+		return res.status(message.code(0)).json(newfeeds);
     });
 };
 
@@ -77,11 +77,71 @@ exports.getFeeds = function(req, res) {
 	if (!req.params.uid || !req.params.page)
 		return res.status(message.code(3)).json(message.json(3));
 		
-    db.collection('food', function(err, collection) {
-        collection.find().sort({ create_date : -1 }).limit(10).skip((req.params.page-1)*10).toArray(function(err, newfeeds) {
-			return res.status(message.code(0)).json(newfeeds);
-        });
+    db.collection('food').find().sort({ create_date : -1 }).limit(10).skip((req.params.page-1)*10).toArray(function(err, newfeeds) {
+		return res.status(message.code(0)).json(newfeeds);
     });
+};
+
+
+exports.myFoodList = function(req, res) {
+	if (!req.params.uid)
+		return res.status(message.code(3)).json(message.json(3));
+	
+    db.collection('food').find( {
+	    like_person : req.params.uid
+    }).sort({ create_date : -1 }).limit(10).skip((req.params.page-1)*10).toArray(function(err, newfeeds) {
+		return res.status(message.code(0)).json(newfeeds);
+    });
+};
+
+
+exports.rankList = function(req, res) {
+	if (!req.params.uid || !req.params.page)
+		return res.status(message.code(3)).json(message.json(3));
+		
+    db.collection('food').find().sort({ create_date : -1 }).limit(10).skip((req.params.page-1)*10).toArray(function(err, newfeeds) {
+		return res.status(message.code(0)).json(newfeeds);
+    });
+};
+
+
+exports.rankPost = function(req, res) {
+	if (!req.params.uid || !req.params.food_id || !req.params.rate)
+		return res.status(message.code(3)).json(message.json(3));
+		
+	db.collection('food').findOne( { _id : ObjectId(req.params.food_id) }, function(err,food){
+		if (err) res.status(message.code(1)).json(message.json(1));
+		if (!food) res.status(message.code(1)).json(message.json(1));
+		
+		var new_rate_cnt = food.rate_cnt;
+		var new_rate_person = food.rate_person;
+		var new_rate_distribution = food.rate_distribution;
+		
+		var isranked = false;
+		var rank_cnt = 0;
+		for (var idx=0; idx<new_rate_person.length; idx++) {
+			if (new_rate_person[idx] == req.params.uid) {
+				isranked = true;
+			}
+		}
+		if (!isranked) {
+			new_rate_person.push(req.params.uid);
+			new_rate_distribution.push(req.params.rate);
+			new_rate_cnt++;
+		}
+		
+		db.collection('food').update( 
+			{ _id: ObjectId(req.params.food_id) }, 
+			{ $set: {rate_cnt : new_rate_cnt, rate_person : new_rate_person, rate_distribution : new_rate_distribution} },
+			function(err, update) {
+				db.collection('food').findOne( { _id : ObjectId(req.params.food_id) }, function(err,update_food){
+					if (err) res.status(message.code(1)).json(message.json(1));
+					if (!update_food) res.status(message.code(1)).json(message.json(1));
+					return res.status(message.code(0)).json(update_food);
+				});
+			}
+		);	
+	});
 };
  
 exports.addFood = function(req, res) {
@@ -139,7 +199,7 @@ exports.like = function(req, res) {
 		var new_like_person = food.like_person;
 		
 		var isliked = false;
-		for (var idx=0; idx<new_like_person.length; idx) {
+		for (var idx=0; idx<new_like_person.length; idx++) {
 			if (new_like_person[idx] == req.params.uid) {
 				isliked = true;
 				new_like_cnt--;
@@ -168,6 +228,19 @@ exports.like = function(req, res) {
 };
 
 
+exports.likePersons = function(req, res) {
+	if (!req.params.food_id)
+		return res.status(message.code(3)).json(message.json(3));
+		
+    db.collection('food').findOne( { _id : ObjectId(req.params.food_id) }, { like_person: 1 , _id : 0 }, function(err,food ) {
+		if (err) res.status(message.code(1)).json(message.json(1));
+		if (!food) res.status(message.code(1)).json(message.json(1));
+		
+		return res.status(message.code(0)).json(food);
+	});
+};
+
+
 exports.getImage = function(req, res) {
     var filename = req.params.filename;
     console.log('get Image of food: ' + filename);
@@ -180,43 +253,36 @@ exports.getImage = function(req, res) {
 exports.uploadImage = function(req, res) {
     var form = new multiparty.Form();
     
-      // file upload handling
-      form.on('part',function(part){
-           var filename = req.params.image_url+".png";
-           var size;
-           if (part.filename) {
-                 size = part.byteCount;
-           }else{
-                 part.resume();
-          
-           }    
- 
-           console.log("Write Streaming file :"+filename);
-           var writeStream = fs.createWriteStream('/home/ec2-user/nodecellar2/soma-mukja-server/public/images/'+filename);
-           writeStream.filename = filename;
-           part.pipe(writeStream);
- 
-           part.on('data',function(chunk){
-                 console.log(filename+' read '+chunk.length + 'bytes');
-           });
-          
-           part.on('end',function(){
-                 console.log(filename+' Part read complete');
-                 writeStream.end();
-           });
-      });
- 
-      // all uploads are completed
-      form.on('close',function(){
-           res.status(200).send('Upload complete');
-      });
-     
-      // track progress
-      form.on('progress',function(byteRead,byteExpected){
-           console.log(' Reading total  '+byteRead+'/'+byteExpected);
-      });
-     
-      form.parse(req);
+    // file upload handling
+    form.on('part',function(part){
+		var filename = req.params.image_url+".png";
+		var size;
+		if (part.filename) {
+		    size = part.byteCount;
+		}else{
+		    part.resume();
+		}   
+		console.log("Write Streaming file :"+filename);
+		var writeStream = fs.createWriteStream('/home/ec2-user/nodecellar2/soma-mukja-server/public/images/'+filename);
+		writeStream.filename = filename;
+		part.pipe(writeStream);
+		part.on('data',function(chunk){
+		    console.log(filename+' read '+chunk.length + 'bytes');
+		});
+		part.on('end',function(){
+		    console.log(filename+' Part read complete');
+		    writeStream.end();
+		});
+    });
+	// all uploads are completed
+	form.on('close',function(){
+		res.status(200).send('Upload complete');
+	});
+	// track progress
+	form.on('progress',function(byteRead,byteExpected){
+		console.log(' Reading total  '+byteRead+'/'+byteExpected);
+	});
+	form.parse(req);
 };
 
 exports.getSearchResult = function(req, res){
