@@ -249,42 +249,6 @@ exports.getImage = function(req, res) {
      res.end(img, 'binary');
 };
 
-// image upload(success)
-exports.uploadImage = function(req, res) {
-    var form = new multiparty.Form();
-    
-    // file upload handling
-    form.on('part',function(part){
-		var filename = req.params.image_url+".png";
-		var size;
-		if (part.filename) {
-		    size = part.byteCount;
-		}else{
-		    part.resume();
-		}   
-		console.log("Write Streaming file :"+filename);
-		var writeStream = fs.createWriteStream('/home/ec2-user/nodecellar2/soma-mukja-server/public/images/'+filename);
-		writeStream.filename = filename;
-		part.pipe(writeStream);
-		part.on('data',function(chunk){
-		    console.log(filename+' read '+chunk.length + 'bytes');
-		});
-		part.on('end',function(){
-		    console.log(filename+' Part read complete');
-		    writeStream.end();
-		});
-    });
-	// all uploads are completed
-	form.on('close',function(){
-		res.status(200).send('Upload complete');
-	});
-	// track progress
-	form.on('progress',function(byteRead,byteExpected){
-		console.log(' Reading total  '+byteRead+'/'+byteExpected);
-	});
-	form.parse(req);
-};
-
 exports.getSearchResult = function(req, res){
 	var keyword = req.params.keyword;
 	console.log('get Search Result : ' + keyword);
@@ -300,6 +264,7 @@ exports.getSearchResult = function(req, res){
 	});
 };
 
+
 exports.getFoodsForUser = function(req, res){
 	var uid = req.params.uid;
 	//나중에 각각 유저마다 음식평가 화면에 음식 목록들 다 다르게 주기위해서(큐레이션) 일단 user_id를 받아오는 것만.
@@ -308,4 +273,21 @@ exports.getFoodsForUser = function(req, res){
             res.send(items);
         });
     });
+};
+
+
+exports.foodImageUpload = function(req, res){
+	if (!req.params.food_id) return res.status(message.code(3)).json(message.json(3));
+
+	db.collection('food').update( 
+		{ _id: ObjectId(req.params.food_id) }, 
+		{ $set: {image_url : req.file.filename} },
+		function(err, update) {
+			db.collection('food').findOne( { _id : ObjectId(req.params.food_id) }, function(err,update_food){
+				if (err) res.status(message.code(1)).json(message.json(1));
+				if (!update_food) res.status(message.code(1)).json(message.json(1));
+				return res.status(message.code(0)).json(update_food);
+			});
+		}
+	);			
 };

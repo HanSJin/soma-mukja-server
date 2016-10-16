@@ -5,6 +5,8 @@ const express = require('express');
 const path = require('path');
 const app = express();
 
+const multer = require('multer');
+const uploader = multer({ dest: imageRepoPath });
 
 const foods = require('./routes/foods');
 // const users = require('./routes/users');
@@ -79,6 +81,13 @@ app.post('/food/post', foods.addFood);
 // 탭 2 음식 업로드 (이미지)
 app.post('/upload/food/:image_url', foods.uploadImage);
 
+// 탭 2 음식 업로드 (이미지) 2
+app.post(
+  '/post/:food_id/image/upload',
+  uploader.single('post_image'),
+  foods.foodImageUpload
+); 
+
 // 평가하기 - 평가 음식 리스트
 app.get('/rank/:uid/:page', foods.rankList);
 
@@ -88,12 +97,23 @@ app.post('/rank/:uid/:food_id/:rate', foods.rankPost);
 // 탭 5 내가 좋아한 음식
 app.get('/users/:uid/mylist', foods.myFoodList);
 
+// 음식 사진 업로드
+app.post(
+  '/post/:food_id/image/upload',
+  uploader.single('post_image'),
+  foods.foodImageUpload
+); 
+
+
+
+
+
 
 app.get('/foods/:keyword', foods.getSearchResult);
 app.post('/users/:user_id/edit/aboutMe', user.updateAboutme);
 app.get('/images/food/:filename', foods.getImage);
 app.get('/:uid/foods', foods.getFoodsForUser);
-
+ 
 
 
 // catch 404 and forward to error handler
