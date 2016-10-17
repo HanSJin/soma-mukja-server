@@ -60,33 +60,53 @@ exports.getRecommand = function(req, res) {
 	var category = req.body.category;
 	// NEED SOME LOGICS FOR CURATION.
 	
-	if(req.body.taste.length == 0 && req.body.country.length == 0 && req.body.cooking.length == 0){	
+	var taste_cnt = req.body.taste.length;
+	var country_cnt = req.body.country.length;
+	var cooking_cnt = req.body.cooking.length;
+		
+	if(taste_cnt+country_cnt+cooking_cnt == 0){	
 	    db.collection('food').find().limit(10).skip((req.params.page-1)*10).toArray(function(err, newfeeds) {
 			return res.status(message.code(0)).json(newfeeds);
 		});	
     }else{
-	    
-	    if(req.body.taste.length == 0)
-	    	req.body.taste[0] = "없음";
-	    if(req.body.country.length == 0)
-	    	req.body.country[0] = "없음";
-	    if(req.body.cooking.length == 0)
-	    	req.body.cooking[0] = "없음";
-	    	
-	    console.log("req.body.taste:"+req.body.taste);
-	    console.log("req.body.country:"+req.body.country);
-	    console.log("req.body.cooking:"+req.body.cooking);
-	    	
-	    db.collection('food').find({
-		    $or: [
-		    	{ taste : { $in: req.body.taste } },
-		    	{ country : { $in: req.body.country } },
-		    	{ cooking : { $in: req.body.cooking } }
-		    ]
-		}).sort({ create_date : -1 }).limit(10).skip((req.params.page-1)*10).toArray(function(err, newfeeds) {
-			console.log(newfeeds);
-			return res.status(message.code(0)).json(newfeeds);
-	    });	
+	    var index = 0;
+		var main = new Array();
+		if(req.body.taste.length > 0){
+			var list = new Array();
+			    for (var idx=0; idx<req.body.taste.length; idx++) {
+					list[idx] = req.body.taste[idx];
+				}
+			    main[index++] = { taste : { $in: list } };
+	    	}
+		if(req.body.country.length > 0){
+	    	var list = new Array();
+			for (var idx=0; idx<req.body.country.length; idx++) {
+				list[idx] = req.body.country[idx];
+			}
+			main[index++] = { country : { $in: list } };	    	}
+		if(req.body.cooking.length > 0){
+			var list = new Array();
+			for (var idx=0; idx<req.body.cooking.length; idx++) {
+				list[idx] = req.body.cooking[idx];
+			}
+			main[index++] = { cooking : { $in: list } };
+	    }
+		
+	    if(taste_cnt+country_cnt+cooking_cnt == 1){
+		    db.collection('food').find({$or: main})
+		    	.sort({ create_date : -1 }).limit(10)
+		    	.skip((req.params.page-1)*10)
+		    	.toArray(function(err, newfeeds) {						
+				    return res.status(message.code(0)).json(newfeeds);
+	    	});	
+	    }else{
+		  	db.collection('food').find({$and: main})
+		  		.sort({ create_date : -1 }).limit(10)
+		  		.skip((req.params.page-1)*10)
+		  		.toArray(function(err, newfeeds) {				
+			  		return res.status(message.code(0)).json(newfeeds);
+	    	});	
+	    }
 	}
 };
 
@@ -331,8 +351,6 @@ exports.likePersons = function(req, res) {
 	if (!req.params.food_id)
 		return res.status(message.code(3)).json(message.json(3));
 		
-//     db.collection('food').findOne( { _id : ObjectId(req.params.food_id) }, function(err, food_person){
-
 	db.collection('food').findOne( { _id : ObjectId(req.params.food_id) }, { _id : 0, like_person : 1}, function(err, food_person){
 		if (err) res.status(message.code(1)).json(message.json(1));
 		if (!food_person) res.status(message.code(1)).json(message.json(1));
@@ -341,7 +359,6 @@ exports.likePersons = function(req, res) {
 		for (var idx=0; idx<food_person.like_person.length; idx++) {
 			condition.push({ _id: new ObjectId(food_person.like_person[idx]) });
 		}
-		
 	    db.collection('user').find( { $or: condition }).toArray(function(err, persons){	
 			return res.status(message.code(0)).json(persons);
 		});
