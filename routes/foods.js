@@ -73,19 +73,18 @@ exports.getRecommand = function(req, res) {
 		var main = new Array();
 		if(req.body.taste.length > 0){
 			var list = new Array();
-			    for (var idx=0; idx<req.body.taste.length; idx++) {
-					list[idx] = req.body.taste[idx];
-				}
-			    main[index++] = { taste : { $in: list } };
-	    	}
-		if(req.body.country.length > 0){
-	    	var list = new Array();
+			for (var idx=0; idx<req.body.taste.length; idx++) {
+				list[idx] = req.body.taste[idx];
+			}
+			main[index++] = { taste : { $in: list } };
+	    }
+		if(req.body.country.length > 0){	    	var list = new Array();
 			for (var idx=0; idx<req.body.country.length; idx++) {
 				list[idx] = req.body.country[idx];
 			}
-			main[index++] = { country : { $in: list } };	    	}
-		if(req.body.cooking.length > 0){
-			var list = new Array();
+			main[index++] = { country : { $in: list } };  	
+		}
+		if(req.body.cooking.length > 0){			var list = new Array();
 			for (var idx=0; idx<req.body.cooking.length; idx++) {
 				list[idx] = req.body.cooking[idx];
 			}
@@ -375,17 +374,23 @@ exports.getImage = function(req, res) {
 
 
 exports.getSearchResult = function(req, res){
-	var keyword = req.params.keyword;
-	db.collection('food', function(err, collection){
-		collection.find({name : {$regex:keyword}}).toArray(function(err, foods){
-			var len = foods.length;
-			if(len == 0){
-				res.send("No result");
-			}else{
-				res.send(foods);
-			}
-		});
-	});
+	var keywordlist = new Array();
+	keywordlist[0] = req.params.keyword;
+	
+	var main = new Array();
+	main[0] = { name : req.params.keyword };
+	main[1] = { taste : req.params.keyword };
+	main[2] = { country : req.params.keyword };
+	main[3] = { cooking : req.params.keyword };
+			
+	db.collection('food').find({$or: main}).toArray(function(err, foods) {				
+		var len = foods.length;
+		if(len == 0){
+			res.send("No result");
+		}else{
+			res.send(foods);
+		}
+	});	
 };
 
 
