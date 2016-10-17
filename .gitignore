@@ -44,4 +44,4 @@ jspm_packages
 # Output of 'npm pack'
 *.tgz
 
-.public/images
+public/images

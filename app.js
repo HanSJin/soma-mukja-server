@@ -33,20 +33,6 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(cookieParser());
 
-/// TEST API 여깃는건 샘플이었지?
-/*
-app.get('/foods', foods.findAll);
-app.get('/foods/:_id/:user', foods.findById);
-app.put('/foods/:_id', foods.updateFood);
-app.delete('/foods/:_id', foods.deleteFood);
-// app.post('/users', users.addUser);
-app.get('/pio/create_items',foods.addAllitem);
-app.get('/pio/buy/:user/:food',foods.buyitem);
-app.get('/pio/similar/:food',foods.similarResult);
-app.get('/pio/recommendation/:user',foods.recommendationResult);
-*/
-
-
 
 // REAL API -- !!
 app.post('/sign/in', user.signIn);
@@ -99,16 +85,6 @@ app.post('/rank/:uid/:food_id/:rate', foods.rankPost);
 
 // 탭 5 내가 좋아한 음식
 app.get('/users/:uid/mylist', foods.myFoodList);
-
-// 음식 사진 업로드
-app.post(
-  '/post/:food_id/image/upload',
-  uploader.single('post_image'),
-  foods.foodImageUpload
-); 
-
-
-
 
 
 

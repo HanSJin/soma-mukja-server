@@ -52,6 +52,7 @@ exports.getFood = function(req, res) {
 	});
 };
 
+
 exports.getRecommand = function(req, res) {
 	if (!req.params.uid)
 		return res.status(message.code(3)).json(message.json(3));
@@ -149,6 +150,7 @@ exports.rankPost = function(req, res) {
 		);	
 	});
 };
+
  
 exports.addFood = function(req, res) {
 	var now = new Date();
@@ -160,6 +162,7 @@ exports.addFood = function(req, res) {
 	var author = req.body.author;
 	var image_url = req.body.image_url;
 	var list = new Array();
+	var list_rate = [0,0,0,0,0,0,0,0,0,0];
     db.collection('food', function(err, collection) {
         collection.insert({
 	        update_date : now,
@@ -176,7 +179,7 @@ exports.addFood = function(req, res) {
 			rate_cnt : 0,
 			rate_person : list,
 			author : author,
-			rate_distribution : list
+			rate_distribution : list_rate
         }, function(err, food) {
 			if(err){
 				res.status(message.code(1)).json(message.json(1));    //유저 데이터 생성 성공! 코드 몇번?
@@ -185,6 +188,7 @@ exports.addFood = function(req, res) {
         });
     });
 }
+
 
 exports.report = function(req, res) {
 	if (!req.params.uid || !req.params.food_id)
@@ -233,6 +237,7 @@ exports.like = function(req, res) {
     });
 };
 
+
 exports.rate = function(req, res) {
 	if (!req.params.uid || !req.params.food_id)
 		return res.status(message.code(3)).json(message.json(3));
@@ -278,6 +283,7 @@ exports.rate = function(req, res) {
     });
 };
 
+
 exports.likePersons = function(req, res) {
 	if (!req.params.food_id)
 		return res.status(message.code(3)).json(message.json(3));
@@ -298,6 +304,7 @@ exports.getImage = function(req, res) {
      res.writeHead(200, {'Content-Type': 'image/gif' });
      res.end(img, 'binary');
 };
+
 
 exports.getSearchResult = function(req, res){
 	var keyword = req.params.keyword;
