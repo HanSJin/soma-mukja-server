@@ -121,6 +121,13 @@ exports.myFoodList = function(req, res) {
 };
 
 
+exports.getExplore = function(req, res) {
+    db.collection('explore').find({}, {_id : 0}).toArray(function(err, defaultExplore) {
+		return res.status(message.code(0)).json(defaultExplore);
+    });
+};
+
+
 exports.rankList = function(req, res) {
 	if (!req.params.uid || !req.params.page)
 		return res.status(message.code(3)).json(message.json(3));
@@ -324,11 +331,20 @@ exports.likePersons = function(req, res) {
 	if (!req.params.food_id)
 		return res.status(message.code(3)).json(message.json(3));
 		
-    db.collection('food').findOne( { _id : ObjectId(req.params.food_id) }, { like_person: 1 , _id : 0 }, function(err,food ) {
+//     db.collection('food').findOne( { _id : ObjectId(req.params.food_id) }, function(err, food_person){
+
+	db.collection('food').findOne( { _id : ObjectId(req.params.food_id) }, { _id : 0, like_person : 1}, function(err, food_person){
 		if (err) res.status(message.code(1)).json(message.json(1));
-		if (!food) res.status(message.code(1)).json(message.json(1));
+		if (!food_person) res.status(message.code(1)).json(message.json(1));
+
+		var condition = [];
+		for (var idx=0; idx<food_person.like_person.length; idx++) {
+			condition.push({ _id: new ObjectId(food_person.like_person[idx]) });
+		}
 		
-		return res.status(message.code(0)).json(food);
+	    db.collection('user').find( { $or: condition }).toArray(function(err, persons){	
+			return res.status(message.code(0)).json(persons);
+		});
 	});
 };
 

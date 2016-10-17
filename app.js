@@ -59,7 +59,10 @@ app.post('/like/:uid/:food_id', foods.like);
 app.post('/rate/:uid/:food_id', foods.rate);
 
 // 음식 - 해당 음식을 먹고싶어한 사람들
-app.get('/like/:food_id/page', foods.likePersons);
+app.get('/like/:food_id', foods.likePersons);
+
+// 탭 3 검색 디폴트 목록 받기
+app.get('/explore', foods.getExplore);
 
 // 탭 2 피드 받기
 app.get('/feeds/:uid/:page', foods.getFeeds);
