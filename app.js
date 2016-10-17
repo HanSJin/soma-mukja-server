@@ -40,14 +40,17 @@ app.post('/sign/up', user.signUp);
 
 //  SJ
 
-// 탭 2 음식 업로드
-app.get('/food/:food_id', foods.getFood);
-
 // 탭 1 추천 받기
 app.post('/recommand/:uid', foods.getRecommand);
 
 // 탭 1 추천 받기
 app.get('/category', foods.getCategory);
+
+// 음식 - 음식 정보 받기
+app.get('/food/:food_id', foods.getFood);
+
+// 음식 - 상세보기
+app.get('/food/:food_id/:uid/view', foods.viewFood);
 
 // 음식 - 먹고싶어요
 app.post('/like/:uid/:food_id', foods.like);
@@ -85,7 +88,6 @@ app.post('/rank/:uid/:food_id/:rate', foods.rankPost);
 
 // 탭 5 내가 좋아한 음식
 app.get('/users/:uid/mylist', foods.myFoodList);
-
 
 
 app.get('/foods/:keyword', foods.getSearchResult);

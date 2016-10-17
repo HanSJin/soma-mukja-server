@@ -65,7 +65,26 @@ exports.getRecommand = function(req, res) {
 			return res.status(message.code(0)).json(newfeeds);
 		});	
     }else{
-	    db.collection('food').find({$or: [{ taste : { $in: req.body.taste } },{ country : { $in: req.body.country } },{ cooking : { $in: req.body.cooking } }]}).sort({ create_date : -1 }).limit(10).skip((req.params.page-1)*10).toArray(function(err, newfeeds) {
+	    
+	    if(req.body.taste.length == 0)
+	    	req.body.taste[0] = "없음";
+	    if(req.body.country.length == 0)
+	    	req.body.country[0] = "없음";
+	    if(req.body.cooking.length == 0)
+	    	req.body.cooking[0] = "없음";
+	    	
+	    console.log("req.body.taste:"+req.body.taste);
+	    console.log("req.body.country:"+req.body.country);
+	    console.log("req.body.cooking:"+req.body.cooking);
+	    	
+	    db.collection('food').find({
+		    $or: [
+		    	{ taste : { $in: req.body.taste } },
+		    	{ country : { $in: req.body.country } },
+		    	{ cooking : { $in: req.body.cooking } }
+		    ]
+		}).sort({ create_date : -1 }).limit(10).skip((req.params.page-1)*10).toArray(function(err, newfeeds) {
+			console.log(newfeeds);
 			return res.status(message.code(0)).json(newfeeds);
 	    });	
 	}
@@ -238,6 +257,24 @@ exports.like = function(req, res) {
 };
 
 
+exports.viewFood = function(req, res) {
+	if (!req.params.uid || !req.params.food_id)
+		return res.status(message.code(3)).json(message.json(3));
+		
+	db.collection('food').findOne( { _id : ObjectId(req.params.food_id) }, function(err,food){
+		if (err) res.status(message.code(1)).json(message.json(1));
+		
+		var new_view_cnt = food.view_cnt+1;		
+		db.collection('food').update( 
+			{ _id: ObjectId(req.params.food_id) }, 
+			{ $set: {view_cnt : new_view_cnt } },
+		function(err, update) {
+			return res.status(message.code(0)).json(message.json(0));
+		});	
+	});
+};
+
+
 exports.rate = function(req, res) {
 	if (!req.params.uid || !req.params.food_id)
 		return res.status(message.code(3)).json(message.json(3));
@@ -246,7 +283,6 @@ exports.rate = function(req, res) {
 		if (err) res.status(message.code(1)).json(message.json(1));
 		if (!food) res.status(message.code(1)).json(message.json(1));
 		
-		console.log(req.body.rate_person);
 		var new_rate_cnt = food.rate_cnt;
 		var new_rate_person = req.body.rate_person;
 		var new_rate_distribution = food.rate_distribution;
@@ -299,16 +335,14 @@ exports.likePersons = function(req, res) {
 
 exports.getImage = function(req, res) {
     var filename = req.params.filename;
-    console.log('get Image of food: ' + filename);
     var img = fs.readFileSync('./images/food/' + filename);
-     res.writeHead(200, {'Content-Type': 'image/gif' });
-     res.end(img, 'binary');
+    res.writeHead(200, {'Content-Type': 'image/gif' });
+    res.end(img, 'binary');
 };
 
 
 exports.getSearchResult = function(req, res){
 	var keyword = req.params.keyword;
-	console.log('get Search Result : ' + keyword);
 	db.collection('food', function(err, collection){
 		collection.find({name : {$regex:keyword}}).toArray(function(err, foods){
 			var len = foods.length;
