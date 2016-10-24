@@ -74,9 +74,6 @@ app.get('/report/:uid/:food_id', foods.report);
 app.post('/food/post', foods.addFood);
 
 // 탭 2 음식 업로드 (이미지)
-app.post('/upload/food/:image_url', foods.uploadImage);
-
-// 탭 2 음식 업로드 (이미지) 2
 app.post(
   '/post/:food_id/image/upload',
   uploader.single('post_image'),
@@ -97,6 +94,13 @@ app.get('/foods/:keyword', foods.getSearchResult);
 app.post('/users/:user_id/edit/aboutMe', user.updateAboutme);
 app.get('/images/food/:filename', foods.getImage);
 app.get('/:uid/foods', foods.getFoodsForUser);
+
+// 탭 5 유저 업로드 (이미지)
+app.post(
+  '/post/:user_id/image/upload/profile',
+  uploader.single('post_image'),
+  user.userImageUpload
+); 
  
 
 

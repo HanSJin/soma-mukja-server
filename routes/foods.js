@@ -208,6 +208,7 @@ exports.addFood = function(req, res) {
 	var image_url = req.body.image_url;
 	var list = new Array();
 	var list_rate = [0,0,0,0,0,0,0,0,0,0];
+	
     db.collection('food', function(err, collection) {
         collection.insert({
 	        update_date : now,
@@ -326,6 +327,18 @@ exports.rate = function(req, res) {
 		
 		if (!israted) {
 			new_rate_cnt++;
+			db.collection('user').findOne( {_id: ObjectId(req.params.uid)}, function(err, user){
+			    if (err) res.status(message.code(1)).json(message.json(1));
+				if (!user) res.status(message.code(1)).json(message.json(1));
+			    
+			    var new_rated_food_num = user.rated_food_num+1;
+				
+				db.collection('user').update(
+					{ _id: ObjectId(req.params.uid)},
+					{ $set: {rated_food_num: new_rated_food_num}}
+				);
+		    });
+
 		}
 		
 		var i = new_rate_person[0].rate_num*2-1;
@@ -342,8 +355,10 @@ exports.rate = function(req, res) {
 				});
 			}
 		);	
+		
     });
-};
+    
+    };
 
 
 exports.likePersons = function(req, res) {

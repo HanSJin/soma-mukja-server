@@ -67,7 +67,8 @@ exports.signUp = function(req, res) {
 					age : req.body.age,
 					gender : req.body.gender, 
 					job : req.body.job,
-					location : req.body.location
+					location : req.body.location,
+					rated_food_num : 0
 				}, function(err, user) {
 					if(!err){
 						res.status(message.code(2)).json(message.json(2));    //유저 데이터 생성 성공! 코드 몇번?
@@ -101,7 +102,21 @@ exports.updateAboutme = function (req, res){
 };
 
 
+exports.userImageUpload = function(req, res){
+	
+	if (!req.params.user_id) return res.status(message.code(3)).json(message.json(3));
 
-
-
-
+	db.collection('user').update( 
+		{ _id: ObjectId(req.params.user_id) }, 
+		{ $set: {thumbnail_url : req.file.filename} },
+		function(err, update) {
+			db.collection('user').findOne( { _id : ObjectId(req.params.user_id) }, function(err,update_user){
+				if (err) res.status(message.code(1)).json(message.json(1));
+				if (!update_user) res.status(message.code(1)).json(message.json(1));
+				return res.status(message.code(0)).json(update_user);
+			});
+			
+		
+		}
+	);			
+};
