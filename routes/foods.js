@@ -393,7 +393,7 @@ exports.getSearchResult = function(req, res){
 	keywordlist[0] = req.params.keyword;
 	
 	var main = new Array();
-	main[0] = { name : req.params.keyword };
+	main[0] = { name : {$regex:req.params.keyword} };
 	main[1] = { taste : req.params.keyword };
 	main[2] = { country : req.params.keyword };
 	main[3] = { cooking : req.params.keyword };
