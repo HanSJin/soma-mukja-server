@@ -101,6 +101,14 @@ app.post(
   uploader.single('post_image'),
   user.userImageUpload
 ); 
+
+// 탭 5 유저 업로드 (페이스북 이미지)
+app.post('/users/:user_id/edit/profile/facebook', user.updateUserImage_Facebook);
+
+// 탭 5 유저 정보 새로고침
+app.get('/users/:uid/myinfo', user.myInfo);
+
+
  
 
 

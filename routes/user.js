@@ -2,9 +2,7 @@
 const message = require('../message');
 var mongo = require('mongodb');
 const crypto = require('crypto');
-//require('date-utils');
-
-
+var ObjectId = require('mongodb').ObjectID;
 
 var Server = mongo.Server,
     Db = mongo.Db,
@@ -30,20 +28,41 @@ exports.signIn = function(req, res) {
     db.collection('user', function(err, collection) {
 	    collection.findOne( { social_id : req.body.social_id }, function(err, user) {
 			if (!user) return res.status(message.code(5)).json(message.json(5, err));
+			
+			var now = new Date();
+			now.setHours(now.getHours()+9);
+			var new_access_cnt = user.access_cnt+1;
+			var new_login_cnt = user.login_cnt+1;
+			
+			db.collection('user').update(
+				{ social_id: req.body.social_id},
+				{ $set: {access_last_date:now, login_last_date:now, 
+						access_cnt:new_access_cnt,login_cnt:new_login_cnt}}
+			)
             res.send(user);
         });
     });
 };
 
+				
 exports.signUp = function(req, res) {
-    db.collection('user', function(err, collection) {
-	    collection.findOne( { social_id : req.body.social_id }, function(err, user) {
+	db.collection('user', function(err, collection) {
+	   collection.findOne( { social_id : req.body.social_id }, function(err, user) {
 		    if(err){
-			    console.log(err);
+		   		console.log(err);
 		    } 
-			if (user == null) {
+		    if (user == null) {
 				var now = new Date();
-				collection.insert( { 
+				now.setHours(now.getHours()+9);
+				
+				var ip;
+				require('dns').lookup(require('os').hostname(), function (err, add, fam) {
+				 console.log('addr: '+add);
+				 ip = add;
+				 console.log(ip);
+				});
+				
+				collection.insert({ 
 					social_id : req.body.social_id,
 					update_date : now,
 					create_date : now,
@@ -54,14 +73,14 @@ exports.signUp = function(req, res) {
 					push_use : true,
 					device_type : req.body.device_type,
 					app_version : req.body.app_version,
-					access_ip : "",
+					access_ip : ip,
 					access_last_date : now,
 					login_last_date : now,
 					access_cnt : 0,
 					login_cnt : 0,
 					report_cnt : 0,
-					thumbnail_url : "",
-					thumbnail_url_small : "",
+					thumbnail_url : "http://graph.facebook.com/"+req.body.social_id+"/picture?type=normal",
+					thumbnail_url_small : "http://graph.facebook.com/"+req.body.social_id+"/picture?type=small",
 					nickname : req.body.nickname,
 					about_me : req.body.about_me,
 					age : req.body.age,
@@ -70,28 +89,45 @@ exports.signUp = function(req, res) {
 					location : req.body.location,
 					rated_food_num : 0
 				}, function(err, user) {
-					if(!err){
-						res.status(message.code(2)).json(message.json(2));    //유저 데이터 생성 성공! 코드 몇번?
+						if(!err){
+							//res.status(message.code(2)).json(message.json(2));    //유저 데이터 생성 성공! 코드 몇번?
+							collection.findOne( {social_id:req.body.social_id},function(err,user){
+								res.send(user);
+							});
+						}
+						  //res(1);//code(1) = success;
 					}
-				   //res(1);//code(1) = success;
-				   res.send(user)
-				});
+				);
 			} else {
 				res.send(user);
 			}
         });
     });
-						    
 };
 
-exports.updateAboutme = function (req, res){
-	var dt = new Date();
-	dt.setHours(dt.getHours() + 9);  
-	var d = dt.toFormat('YYYY-MM-DD HH24:MI:SS');
-		
+exports.updateAboutme = function(req, res){
+	var now = new Date();
+	now.setHours(now.getHours() + 9);  
+	
 	db.collection('user', function(err, collection) {
-	    collection.update( { social_id : req.params.user_id }, 
-	    {$set:{about_me:req.body.about_me, update_date:d}}, 
+	    collection.update( { _id : ObjectId(req.params.user_id) }, 
+	    {$set:{about_me:req.body.about_me, update_date:now}}, 
+	    function(err, user) {
+			if(err){
+				console.log(err);
+			}
+			res.status(message.code(0)).json(message.json(0));
+		})
+	});
+};
+
+exports.updateUserImage_Facebook = function(req, res){
+	var now = new Date();
+	now.setHours(now.getHours() + 9);  
+	
+	db.collection('user', function(err, collection) {
+	    collection.update( { _id : ObjectId(req.params.user_id) }, 
+	    {$set:{thumbnail_url:req.body.thumbnail_url, thumbnail_url_small:req.body.thumbnail_url_small,update_date:now}}, 
 	    function(err, user) {
 			if(err){
 				console.log(err);
@@ -115,8 +151,18 @@ exports.userImageUpload = function(req, res){
 				if (!update_user) res.status(message.code(1)).json(message.json(1));
 				return res.status(message.code(0)).json(update_user);
 			});
-			
-		
 		}
 	);			
+};
+
+exports.myInfo = function(req, res) {
+	if (!req.params.uid)
+		return res.status(message.code(3)).json(message.json(3));
+	
+    db.collection('user').findOne( 
+	    { _id : ObjectId(req.params.uid)},
+	    function(err, user){
+			res.send(user);    
+		}
+    );
 };
