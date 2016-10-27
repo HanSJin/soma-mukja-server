@@ -374,6 +374,7 @@ exports.likePersons = function(req, res) {
 		for (var idx=0; idx<food_person.like_person.length; idx++) {
 			condition.push({ _id: new ObjectId(food_person.like_person[idx]) });
 		}
+		
 		if(condition.length == 0){
 			res.send(null);
 		}else{

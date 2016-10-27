@@ -72,7 +72,6 @@ exports.signIn_NonFacebook = function(req, res) {
 							access_cnt:new_access_cnt,login_cnt:new_login_cnt}}
 			)
 
-			console.log(user[0]);
             res.send(user[0]);
         });
 		
@@ -93,9 +92,7 @@ exports.signUp = function(req, res) {
 				
 				var ip;
 				require('dns').lookup(require('os').hostname(), function (err, add, fam) {
-				 console.log('addr: '+add);
 				 ip = add;
-				 console.log(ip);
 				});
 				
 				collection.insert({ 
@@ -129,6 +126,7 @@ exports.signUp = function(req, res) {
 						if(!err){
 							//res.status(message.code(2)).json(message.json(2));    //유저 데이터 생성 성공! 코드 몇번?
 							collection.findOne( {social_id:req.body.social_id},function(err,user){
+							
 								res.send(user);
 							});
 						}
@@ -202,4 +200,19 @@ exports.myInfo = function(req, res) {
 			res.send(user);    
 		}
     );
+};
+
+exports.withdrawalUser = function(req, res) {
+  	if (!req.body.user_id)
+    	return res.status(message.code(3)).json(message.json(3));   
+    db.collection('user', function(err, collection) {
+	    collection.findOne( { _id : ObjectId(req.body.user_id) }, function(err, user) {
+			if (!user) return res.status(message.code(5)).json(message.json(5, err));
+						
+			db.collection('user').deleteOne(
+				{ _id: ObjectId(req.body.user_id)}
+			)
+			return res.status(message.code(0))
+        });
+    });
 };
