@@ -44,6 +44,42 @@ exports.signIn = function(req, res) {
     });
 };
 
+exports.signIn_NonFacebook = function(req, res) {
+  	if (!req.body.social_id || !req.body.password)
+    	return res.status(message.code(3)).json(message.json(3));   
+    	
+    db.collection('user', function(err, collection) {
+	    var main = new Array();
+		main[0] = { social_id :req.body.social_id };
+		main[1] = { password : req.body.password };
+
+	    collection.find( {$and: main}).toArray(function(err, user) {
+		    var len = user.length;
+			if (len == 0) {
+				return res.status(message.code(5)).json(message.json(5, err));
+			}
+			
+			var now = new Date();
+			now.setHours(now.getHours()+9);
+			var new_access_cnt = user[0].access_cnt+1;
+			var new_login_cnt = user[0].login_cnt+1;
+		
+			new_access_cnt = user[0].access_cnt+1;
+			new_login_cnt = user[0].login_cnt+1;
+			db.collection('user').update(
+					{ _id: ObjectId(user[0]._id)},
+					{ $set: {access_last_date:now, login_last_date:now, 
+							access_cnt:new_access_cnt,login_cnt:new_login_cnt}}
+			)
+
+			console.log(user[0]);
+            res.send(user[0]);
+        });
+		
+		
+    });
+};
+
 				
 exports.signUp = function(req, res) {
 	db.collection('user', function(err, collection) {
@@ -87,7 +123,8 @@ exports.signUp = function(req, res) {
 					gender : req.body.gender, 
 					job : req.body.job,
 					location : req.body.location,
-					rated_food_num : 0
+					rated_food_num : 0,
+					password: req.body.password
 				}, function(err, user) {
 						if(!err){
 							//res.status(message.code(2)).json(message.json(2));    //유저 데이터 생성 성공! 코드 몇번?

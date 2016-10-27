@@ -4,6 +4,7 @@ const imageRepoPath = './public/images';
 const express = require('express');
 const path = require('path');
 const app = express();
+const fs = require('fs');
 
 const multer = require('multer');
 const uploader = multer({ dest: imageRepoPath });
@@ -36,7 +37,9 @@ app.use(cookieParser());
 
 // REAL API -- !!
 app.post('/sign/in', user.signIn);
+app.post('/sign/in/NonFacebook', user.signIn_NonFacebook);
 app.post('/sign/up', user.signUp);
+
 
 //  SJ
 
@@ -107,9 +110,6 @@ app.post('/users/:user_id/edit/profile/facebook', user.updateUserImage_Facebook)
 
 // 탭 5 유저 정보 새로고침
 app.get('/users/:uid/myinfo', user.myInfo);
-
-
- 
 
 
 // catch 404 and forward to error handler

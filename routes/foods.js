@@ -133,6 +133,7 @@ exports.myFoodList = function(req, res) {
 		return res.status(message.code(3)).json(message.json(3));
 	
     db.collection('food').find( {
+	    //like_person:{$elemMatch:{user_id:req.params.uid}}
 	    like_person : req.params.uid
     }).sort({ create_date : -1 }).limit(10).skip((req.params.page-1)*10).toArray(function(err, newfeeds) {
 		return res.status(message.code(0)).json(newfeeds);
@@ -346,7 +347,7 @@ exports.rate = function(req, res) {
 				
 		db.collection('food').update( 
 			{ _id: ObjectId(req.params.food_id) }, 
-			{ $set: {rate_cnt : new_rate_cnt, rate_person : new_rate_person, rate_distribution : new_rate_distribution } },
+			{ $set: {rate_cnt : new_rate_cnt, rate_person : new_rate_person, rate_distribution : new_rate_distribution} },
 			function(err, update) {
 				db.collection('food').findOne( { _id : ObjectId(req.params.food_id) }, function(err,update_food){
 					if (err) res.status(message.code(1)).json(message.json(1));
@@ -365,7 +366,7 @@ exports.likePersons = function(req, res) {
 	if (!req.params.food_id)
 		return res.status(message.code(3)).json(message.json(3));
 		
-	db.collection('food').findOne( { _id : ObjectId(req.params.food_id) }, { _id : 0, like_person : 1}, function(err, food_person){
+	db.collection('food').findOne( { _id : ObjectId(req.params.food_id) }, /* { _id : 0, like_person : 1}, */ function(err, food_person){
 		if (err) res.status(message.code(1)).json(message.json(1));
 		if (!food_person) res.status(message.code(1)).json(message.json(1));
 
@@ -373,9 +374,14 @@ exports.likePersons = function(req, res) {
 		for (var idx=0; idx<food_person.like_person.length; idx++) {
 			condition.push({ _id: new ObjectId(food_person.like_person[idx]) });
 		}
-	    db.collection('user').find( { $or: condition }).toArray(function(err, persons){	
-			return res.status(message.code(0)).json(persons);
-		});
+		if(condition.length == 0){
+			res.send(null);
+		}else{
+		    db.collection('user').find( { $or: condition }).toArray(function(err, persons){	
+			    res.send(persons);
+				return res.status(message.code(0)).json(persons);
+			});
+		}
 	});
 };
 
