@@ -113,7 +113,29 @@ app.get('/users/:uid/myinfo', user.myInfo);
 
 app.post('/user/withdrawal', user.withdrawalUser);
  
+// 개인정보 취급방침
+app.get('/privacy_rule', function (req, res) { 
+	fs.readFile('public/privacy_rule.html', function (error, data) {
+		if (error) {
+			console.log(error);
+		} else {
+			res.writeHead(200, { 'Content-Type': 'text/html' });
+			res.end(data);
+		} 
+	});
+});
 
+// 이용약관
+app.get('/agreement', function (req, res) { 
+	fs.readFile('public/agreement.html', function (error, data) {
+		if (error) {
+			console.log(error);
+		} else {
+			res.writeHead(200, { 'Content-Type': 'text/html' });
+			res.end(data);
+		} 
+	});
+});
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

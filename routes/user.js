@@ -37,7 +37,7 @@ exports.signIn = function(req, res) {
 			db.collection('user').update(
 				{ social_id: req.body.social_id},
 				{ $set: {access_last_date:now, login_last_date:now, 
-						access_cnt:new_access_cnt,login_cnt:new_login_cnt}}
+						access_cnt:new_access_cnt,login_cnt:new_login_cnt,friends:req.body.friends}}
 			)
             res.send(user);
         });
@@ -121,7 +121,8 @@ exports.signUp = function(req, res) {
 					job : req.body.job,
 					location : req.body.location,
 					rated_food_num : 0,
-					password: req.body.password
+					password: req.body.password,
+					friends: req.body.friends
 				}, function(err, user) {
 						if(!err){
 							//res.status(message.code(2)).json(message.json(2));    //유저 데이터 생성 성공! 코드 몇번?
@@ -134,7 +135,7 @@ exports.signUp = function(req, res) {
 					}
 				);
 			} else {
-				res.send(user);
+				res.status(message.code(1)).json(message.json(1));
 			}
         });
     });
@@ -184,6 +185,7 @@ exports.userImageUpload = function(req, res){
 			db.collection('user').findOne( { _id : ObjectId(req.params.user_id) }, function(err,update_user){
 				if (err) res.status(message.code(1)).json(message.json(1));
 				if (!update_user) res.status(message.code(1)).json(message.json(1));
+				console.log(update_user);
 				return res.status(message.code(0)).json(update_user);
 			});
 		}
@@ -205,6 +207,7 @@ exports.myInfo = function(req, res) {
 exports.withdrawalUser = function(req, res) {
   	if (!req.body.user_id)
     	return res.status(message.code(3)).json(message.json(3));   
+    //user 콜렉션에서 제거	
     db.collection('user', function(err, collection) {
 	    collection.findOne( { _id : ObjectId(req.body.user_id) }, function(err, user) {
 			if (!user) return res.status(message.code(5)).json(message.json(5, err));
@@ -215,4 +218,8 @@ exports.withdrawalUser = function(req, res) {
 			return res.status(message.code(0))
         });
     });
+    
+    //food 콜렉션에서 like, rate 했던 기록 제거(like_cnt--, rate_cnt--)
+    
+    //user 콜렉션에서 다른 유저의 친구였다면, 친구목록에서 제거
 };
