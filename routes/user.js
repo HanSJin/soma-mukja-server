@@ -24,7 +24,35 @@ db.open(function(err, db) {
 
 exports.signIn = function(req, res) {
   	if (!req.body.social_id)
-    	return res.status(message.code(3)).json(message.json(3));   
+    	return res.status(message.code(3)).json(message.json(3));
+    
+    if(req.body.friends){
+	   var friends = req.body.friends;
+	   console.log(friends);
+	   
+	   console.log(friends[0]);
+	   
+	   db.collection('user',function(err,collection){
+		   var main = new Array();
+		   for(var idx=0;idx<friends.length;idx++){
+		   		main[idx] = {social_id:friends[idx].user_id}
+		   }
+		   
+		   
+	  	collection.find(
+		  	 {$or:main}
+		  	 ).toArray(function(err, user){
+			  	 console.log(user.length);
+			  	 var len = user.length;
+			  	 for(var idx=0;idx<len;idx++){
+				 	friends[idx].user_id = ObjectId(user[idx]._id); //social_id -> ObjectId로 바꾸는 과정
+				 	friends[idx].user_name = user[idx].nickname; 	 
+				 }
+		  	 });
+	  	}); 
+   	   
+    }
+    
     db.collection('user', function(err, collection) {
 	    collection.findOne( { social_id : req.body.social_id }, function(err, user) {
 			if (!user) return res.status(message.code(5)).json(message.json(5, err));
@@ -219,7 +247,14 @@ exports.withdrawalUser = function(req, res) {
         });
     });
     
-    //food 콜렉션에서 like, rate 했던 기록 제거(like_cnt--, rate_cnt--)
+    //<food 콜렉션>
+    //like, rate, registerFood 했던 기록 제거
+    //(like_cnt--, rate_cnt--, like_person에서 제거, rate_person에서 제거)
+    //rate_distribution은 어떻게 제거?
+    //author였으면, 탈퇴 유저가 올렸던 음식들 다 제거.
     
-    //user 콜렉션에서 다른 유저의 친구였다면, 친구목록에서 제거
+    
+    //<user 콜렉션>
+    //다른 유저의 친구였다면, 친구목록(friends)에서 제거
+    
 };
