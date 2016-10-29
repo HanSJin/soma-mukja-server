@@ -133,8 +133,8 @@ exports.myFoodList = function(req, res) {
 		return res.status(message.code(3)).json(message.json(3));
 	
     db.collection('food').find( {
-	    //like_person:{$elemMatch:{user_id:req.params.uid}}
-	    like_person : req.params.uid
+	    like_person:{$elemMatch:{user_id:req.params.uid}}
+	    //like_person : req.params.uid
     }).sort({ create_date : -1 }).limit(10).skip((req.params.page-1)*10).toArray(function(err, newfeeds) {
 		return res.status(message.code(0)).json(newfeeds);
     });
@@ -156,6 +156,7 @@ exports.rankList = function(req, res) {
 		return res.status(message.code(0)).json(newfeeds);
     });
 };
+/*
 
 
 exports.rankPost = function(req, res) {
@@ -173,12 +174,12 @@ exports.rankPost = function(req, res) {
 		var isranked = false;
 		var rank_cnt = 0;
 		for (var idx=0; idx<new_rate_person.length; idx++) {
-			if (new_rate_person[idx] == req.params.uid) {
+			if (new_rate_person[idx].user_id == req.params.uid) {
 				isranked = true;
 			}
 		}
 		if (!isranked) {
-			new_rate_person.push(req.params.uid);
+			new_rate_person.push({user_id:req.params.uid, rate_num:req.});
 			new_rate_distribution.push(req.params.rate);
 			new_rate_cnt++;
 		}
@@ -196,6 +197,7 @@ exports.rankPost = function(req, res) {
 		);	
 	});
 };
+*/
 
  
 exports.addFood = function(req, res) {
@@ -254,10 +256,16 @@ exports.like = function(req, res) {
 		
 		var new_like_cnt = food.like_cnt;
 		var new_like_person = food.like_person;
+		var temp_like_person = food.like_person;
+		
+		var now = new Date();
+		now.setHours(now.getHours()+9);
+
 		
 		var isliked = false;
+		
 		for (var idx=0; idx<new_like_person.length; idx++) {
-			if (new_like_person[idx] == req.params.uid) {
+			if (new_like_person[idx].user_id == req.params.uid) {
 				isliked = true;
 				new_like_cnt--;
 				new_like_person.splice(idx, 1);
@@ -268,12 +276,13 @@ exports.like = function(req, res) {
 		// 좋아요
 		if (!isliked) {
 			new_like_cnt++;
-			new_like_person.push(req.params.uid);
+			new_like_person.push({user_id:req.params.uid,like_date_:now});
 		}
 		db.collection('food').update( 
 			{ _id: ObjectId(req.params.food_id) }, 
 			{ $set: {like_cnt : new_like_cnt, like_person : new_like_person } },
 			function(err, update) {
+				if(err) console.log(err);
 				db.collection('food').findOne( { _id : ObjectId(req.params.food_id) }, function(err,update_food){
 					if (err) res.status(message.code(1)).json(message.json(1));
 					if (!update_food) res.status(message.code(1)).json(message.json(1));
@@ -312,20 +321,28 @@ exports.rate = function(req, res) {
 		if (!food) res.status(message.code(1)).json(message.json(1));
 		
 		var new_rate_cnt = food.rate_cnt;
+		
+		var old_rate_person = food.rate_person;
 		var new_rate_person = req.body.rate_person;
+		
 		var new_rate_distribution = food.rate_distribution;
 		
+		var now = new Date();
+		now.setHours(now.getHours()+9);
+
+		
 		var israted = false;
-		for (var idx=1; idx<new_rate_person.length; idx++) {
-			if (new_rate_person[idx].user_id == req.params.uid) {
+		for (var idx=0; idx<old_rate_person.length; idx++) {
+			if (old_rate_person[idx].user_id == req.params.uid) {
 				israted = true;
-				var i = (new_rate_person[idx].rate_num)*2-1;
+				var i = (old_rate_person[idx].rate_num)*2-1;
 				new_rate_distribution[i] -= 1;
-				new_rate_person.splice(idx, 1);
+				old_rate_person.splice(idx, 1);
 				break;
 			}
 		}
-		
+				
+		var temp = new_rate_person.shift();
 		if (!israted) {
 			new_rate_cnt++;
 			db.collection('user').findOne( {_id: ObjectId(req.params.uid)}, function(err, user){
@@ -339,15 +356,18 @@ exports.rate = function(req, res) {
 					{ $set: {rated_food_num: new_rated_food_num}}
 				);
 		    });
-
 		}
 		
-		var i = new_rate_person[0].rate_num*2-1;
+		
+		
+		old_rate_person.push({user_id:temp.user_id, rate_num:temp.rate_num, rate_date : now});
+		
+		var i = temp.rate_num*2-1;
 		new_rate_distribution[i] += 1;
 				
 		db.collection('food').update( 
 			{ _id: ObjectId(req.params.food_id) }, 
-			{ $set: {rate_cnt : new_rate_cnt, rate_person : new_rate_person, rate_distribution : new_rate_distribution} },
+			{ $set: {rate_cnt : new_rate_cnt, rate_person : old_rate_person, rate_distribution : new_rate_distribution} },
 			function(err, update) {
 				db.collection('food').findOne( { _id : ObjectId(req.params.food_id) }, function(err,update_food){
 					if (err) res.status(message.code(1)).json(message.json(1));
@@ -372,7 +392,7 @@ exports.likePersons = function(req, res) {
 
 		var condition = [];
 		for (var idx=0; idx<food_person.like_person.length; idx++) {
-			condition.push({ _id: new ObjectId(food_person.like_person[idx]) });
+			condition.push({ _id: new ObjectId(food_person.like_person[idx].user_id) });
 		}
 		
 		if(condition.length == 0){

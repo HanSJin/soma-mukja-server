@@ -84,9 +84,11 @@ app.post(
 
 // 평가하기 - 평가 음식 리스트
 app.get('/rank/:uid/:page', foods.rankList);
+/*
 
 // 평가하기 - 음식 평가하기
 app.post('/rank/:uid/:food_id/:rate', foods.rankPost);
+*/
 
 // 탭 5 내가 좋아한 음식
 app.get('/users/:uid/mylist', foods.myFoodList);

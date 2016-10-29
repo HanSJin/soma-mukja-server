@@ -28,9 +28,6 @@ exports.signIn = function(req, res) {
     
     if(req.body.friends){
 	   var friends = req.body.friends;
-	   console.log(friends);
-	   
-	   console.log(friends[0]);
 	   
 	   db.collection('user',function(err,collection){
 		   var main = new Array();
