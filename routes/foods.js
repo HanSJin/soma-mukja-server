@@ -13,8 +13,8 @@ var eventsUrl= process.env.PIOEventUrl || 'http://52.192.137.69';
 var eventsPort= process.env.PIOEventPort || '7070';
 var queryUrl= process.env.PIOQueryUrl || 'https://52.192.137.69';
 var queryPort =  process.env.PIOQueryPort ||'8000';
-var appID= parseInt(process.env.PIOAppID || 26);
-var accessKey=process.env.PIOAccessKey || 'Wl_qIIHjGfIgDX1L84jqXHQ3ZFLVxb4ejV3Fz6GX4vRzEf7noPO1DxDFfFJJB8mJ';
+var appID= parseInt(process.env.PIOAppID || 34);
+var accessKey=process.env.PIOAccessKey || 'vje-u-ykRRXrXHb5gLmN7hwbUjrbGScPG-e64AL7Qkq2h8cVRQKQ1-ubH_kIqrao';
 
 var client = new predictionio.Events({
                         url:eventsUrl,
@@ -300,6 +300,36 @@ exports.like = function(req, res) {
     });
 };
 
+// SMAPLE
+exports.foodBuy = function(req, res) {
+	client.createAction({
+        event: 'buy',
+        uid: req.params.uid,
+        iid: req.params.food_id,
+        eventTime: new Date().toISOString()
+    });
+    res(0);
+};
+exports.foodViewTest = function(req, res) {
+	client.createAction({
+        event: 'view',
+        uid: req.params.uid,
+        iid: req.params.food_id,
+        eventTime: new Date().toISOString()
+    });
+    res(0);
+};
+exports.foodRecommandTest = function(req, res) {
+	pio.sendQuery({user : req.params.uid, num: 300}, function (err, result) {
+        if (err) {
+            console.log(err);
+            return res.status(message.code(5)).json(message.json(5));
+        }
+        else return res.status(message.code(0)).json(result.itemScores);
+    });
+};
+
+        
 
 exports.viewFood = function(req, res) {
 	if (!req.params.uid || !req.params.food_id)
@@ -479,20 +509,17 @@ exports.foodImageUpload = function(req, res){
 };
 
 
-exports.similarFoodResult = function(req,res){
-	db.collection('food').findOne( { _id : ObjectId(req.params.food_id) }, function(err, food){
-		var condition = {
-			items : [req.params.food_id], 
-			num: 10
-		};
-		console.log(condition);
-        pio.sendQuery(condition, function (err, result) {
+exports.recommandFoodResult = function(req,res){
+// 	db.collection('food').findOne( { _id : ObjectId(req.params.food_id) }, function(err, food){
+		pio.sendQuery({user : req.params.uid, num: 10}, function (err, result) {
             if (err) {
                 console.log(err);
 	            return res.status(message.code(5)).json(message.json(5));
 	        }
-            else return res.status(message.code(0)).json(result);
+            else return res.status(message.code(0)).json(result.itemScores);
         });
-    });
+        
+        
+//     });
 };
 

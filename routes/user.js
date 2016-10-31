@@ -10,8 +10,8 @@ var eventsUrl= process.env.PIOEventUrl || 'http://52.192.137.69';
 var eventsPort= process.env.PIOEventPort || '7070';
 var queryUrl= process.env.PIOQueryUrl || 'https://52.192.137.69';
 var queryPort =  process.env.PIOQueryPort ||'8000';
-var appID= parseInt(process.env.PIOAppID || 26);
-var accessKey=process.env.PIOAccessKey || 'Wl_qIIHjGfIgDX1L84jqXHQ3ZFLVxb4ejV3Fz6GX4vRzEf7noPO1DxDFfFJJB8mJ';
+var appID= parseInt(process.env.PIOAppID || 34);
+var accessKey=process.env.PIOAccessKey || 'vje-u-ykRRXrXHb5gLmN7hwbUjrbGScPG-e64AL7Qkq2h8cVRQKQ1-ubH_kIqrao';
 
 var client = new predictionio.Events({
                         url:eventsUrl,

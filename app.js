@@ -72,8 +72,6 @@ app.get('/feeds/:uid/:page', foods.getFeeds);
 // 탭 2 부적절 컨텐츠
 app.get('/report/:uid/:food_id', foods.report);
 
-// 음식 - 비슷한 음식
-app.get('/food/:food_id/similar', foods.similarFoodResult);
 
 // 탭 2 음식 업로드
 app.post('/food/post', foods.addFood);
@@ -141,6 +139,19 @@ app.get('/agreement', function (req, res) {
 		} 
 	});
 });
+
+
+
+// PIO
+// test
+app.get('/food/:food_id/buy/:uid', foods.foodBuy);
+app.get('/food/:food_id/view/:uid', foods.foodViewTest);
+app.get('/food/recommand/:uid', foods.foodRecommandTest);
+
+app.get('/food/:uid/recommand', foods.recommandFoodResult);
+
+
+
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
