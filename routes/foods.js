@@ -277,6 +277,13 @@ exports.like = function(req, res) {
 		if (!isliked) {
 			new_like_cnt++;
 			new_like_person.push({user_id:req.params.uid,like_date_:now});
+			
+			client.createAction({
+		        event: 'buy',
+		        uid: req.params.uid,
+		        iid: req.params.food_id,
+		        eventTime: new Date().toISOString()
+		    });
 		}
 		db.collection('food').update( 
 			{ _id: ObjectId(req.params.food_id) }, 
@@ -299,16 +306,24 @@ exports.viewFood = function(req, res) {
 		return res.status(message.code(3)).json(message.json(3));
 		
 	db.collection('food').findOne( { _id : ObjectId(req.params.food_id) }, function(err,food){
-		if (err) res.status(message.code(1)).json(message.json(1));
-		
-		var new_view_cnt = food.view_cnt+1;		
-		db.collection('food').update( 
-			{ _id: ObjectId(req.params.food_id) }, 
-			{ $set: {view_cnt : new_view_cnt } },
-		function(err, update) {
-			return res.status(message.code(0)).json(message.json(0));
-		});	
-	});
+        client.createAction({
+            event: 'view',
+            uid: req.params.uid,
+            iid: req.params.food_id,
+            eventTime: new Date().toISOString()
+        }).then(function(result) {
+			if (err) res.status(message.code(1)).json(message.json(1));
+			var new_view_cnt = food.view_cnt+1;		
+			db.collection('food').update( 
+				{ _id: ObjectId(req.params.food_id) }, 
+				{ $set: {view_cnt : new_view_cnt } },
+			function(err, update) {
+				return res.status(message.code(0)).json(message.json(0));
+			});	
+        }).catch(function(err) {
+			if (err) res.status(message.code(5)).json(message.json(5));
+        });
+    });
 };
 
 
@@ -462,3 +477,22 @@ exports.foodImageUpload = function(req, res){
 		}
 	);			
 };
+
+
+exports.similarFoodResult = function(req,res){
+	db.collection('food').findOne( { _id : ObjectId(req.params.food_id) }, function(err, food){
+		var condition = {
+			items : [req.params.food_id], 
+			num: 10
+		};
+		console.log(condition);
+        pio.sendQuery(condition, function (err, result) {
+            if (err) {
+                console.log(err);
+	            return res.status(message.code(5)).json(message.json(5));
+	        }
+            else return res.status(message.code(0)).json(result);
+        });
+    });
+};
+

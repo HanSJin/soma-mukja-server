@@ -1,9 +1,29 @@
 
 const message = require('../message');
 var mongo = require('mongodb');
+var predictionio = require('predictionio-driver');
 const crypto = require('crypto');
 var ObjectId = require('mongodb').ObjectID;
 
+// predicitonio
+var eventsUrl= process.env.PIOEventUrl || 'http://52.192.137.69';
+var eventsPort= process.env.PIOEventPort || '7070';
+var queryUrl= process.env.PIOQueryUrl || 'https://52.192.137.69';
+var queryPort =  process.env.PIOQueryPort ||'8000';
+var appID= parseInt(process.env.PIOAppID || 26);
+var accessKey=process.env.PIOAccessKey || 'Wl_qIIHjGfIgDX1L84jqXHQ3ZFLVxb4ejV3Fz6GX4vRzEf7noPO1DxDFfFJJB8mJ';
+
+var client = new predictionio.Events({
+                        url:eventsUrl,
+                        appId:appID,
+                        accessKey:accessKey,
+                        strictSSL:false
+                });
+var pio = new predictionio.Engine({
+                        url: queryUrl,
+                        strictSSL:false
+                });
+                
 var Server = mongo.Server,
     Db = mongo.Db,
     BSON = mongo.BSONPure;
@@ -39,15 +59,18 @@ exports.signIn = function(req, res) {
 	  	collection.find(
 		  	 {$or:main}
 		  	 ).toArray(function(err, user){
-			  	 console.log(user.length);
-			  	 var len = user.length;
-			  	 for(var idx=0;idx<len;idx++){
-				 	friends[idx].user_id = ObjectId(user[idx]._id); //social_id -> ObjectId로 바꾸는 과정
-				 	friends[idx].user_name = user[idx].nickname; 	 
+			  	 if(!user){
+				  	 friends = [];
+			  	 }else{
+				  	 console.log(user.length);
+				  	 var len = user.length;
+				  	 for(var idx=0;idx<len;idx++){
+					 	friends[idx].user_id = ObjectId(user[idx]._id); //social_id -> ObjectId로 바꾸는 과정
+					 	friends[idx].user_name = user[idx].nickname; 	 
+					 }
 				 }
 		  	 });
 	  	}); 
-   	   
     }
     
     db.collection('user', function(err, collection) {
@@ -55,7 +78,7 @@ exports.signIn = function(req, res) {
 			if (!user) return res.status(message.code(5)).json(message.json(5, err));
 			
 			var now = new Date();
-			now.setHours(now.getHours()+9);
+			now.setHours(now.getHours());
 			var new_access_cnt = user.access_cnt+1;
 			var new_login_cnt = user.login_cnt+1;
 			
@@ -85,7 +108,7 @@ exports.signIn_NonFacebook = function(req, res) {
 			}
 			
 			var now = new Date();
-			now.setHours(now.getHours()+9);
+			now.setHours(now.getHours());
 			var new_access_cnt = user[0].access_cnt+1;
 			var new_login_cnt = user[0].login_cnt+1;
 		
@@ -113,7 +136,7 @@ exports.signUp = function(req, res) {
 		    } 
 		    if (user == null) {
 				var now = new Date();
-				now.setHours(now.getHours()+9);
+				now.setHours(now.getHours());
 				
 				var ip;
 				require('dns').lookup(require('os').hostname(), function (err, add, fam) {
@@ -152,7 +175,11 @@ exports.signUp = function(req, res) {
 						if(!err){
 							//res.status(message.code(2)).json(message.json(2));    //유저 데이터 생성 성공! 코드 몇번?
 							collection.findOne( {social_id:req.body.social_id},function(err,user){
-							
+								
+					            client.createUser({uid: user._id}, function (err,result_pio) {
+					                if (!err) console.log('predictionIO createUser :'+JSON.stringify(result_pio));
+					            });
+					            
 								res.send(user);
 							});
 						}

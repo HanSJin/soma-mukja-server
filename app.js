@@ -72,6 +72,9 @@ app.get('/feeds/:uid/:page', foods.getFeeds);
 // 탭 2 부적절 컨텐츠
 app.get('/report/:uid/:food_id', foods.report);
 
+// 음식 - 비슷한 음식
+app.get('/food/:food_id/similar', foods.similarFoodResult);
+
 // 탭 2 음식 업로드
 app.post('/food/post', foods.addFood);
 
