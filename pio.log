@@ -34,3 +34,18 @@
 2016-10-05 21:07:26,618 INFO  io.prediction.tools.console.App$ [main] -                SJApp |   11 | lVIFvdM6m0feavDVazNJ6LOiWphOBZFfUMondw1KvC1J1bGleDDGR6RL2Z8EFVjf | (all)
 2016-10-05 21:07:26,623 INFO  io.prediction.tools.console.App$ [main] -                  ZZZ |   23 | mVCaFTkSpeHbuplZ8_fl3JsfOJuDbGBlkPtwOer2I4yhlu6fOcrxYTGynr6uKb1m | (all)
 2016-10-05 21:07:26,624 INFO  io.prediction.tools.console.App$ [main] - Finished listing 10 app(s).
+2016-11-01 10:33:23,539 INFO  io.prediction.data.storage.hbase.HBLEvents [main] - The table pio_event:events_46 doesn't exist yet. Creating now...
+2016-11-01 10:33:23,806 INFO  io.prediction.tools.console.App$ [main] - Initialized Event Store for this app ID: 46.
+2016-11-01 10:33:23,822 INFO  io.prediction.tools.console.App$ [main] - Created new app:
+2016-11-01 10:33:23,822 INFO  io.prediction.tools.console.App$ [main] -       Name: mijeong
+2016-11-01 10:33:23,823 INFO  io.prediction.tools.console.App$ [main] -         ID: 46
+2016-11-01 10:33:23,823 INFO  io.prediction.tools.console.App$ [main] - Access Key: _b1VCNkX9rek7p3dizHM2VToEe9Nn1eICQkeg6vJmcnAyfHCu5a-um_i4afb3tYr
+2016-11-01 10:33:35,121 INFO  io.prediction.tools.console.App$ [main] - The following app (including all channels) will be deleted. Are you sure?
+2016-11-01 10:33:35,123 INFO  io.prediction.tools.console.App$ [main] -     App Name: mijeong
+2016-11-01 10:33:35,124 INFO  io.prediction.tools.console.App$ [main] -       App ID: 46
+2016-11-01 10:33:35,124 INFO  io.prediction.tools.console.App$ [main] -  Description: 
+2016-11-01 10:33:38,781 INFO  io.prediction.data.storage.hbase.HBLEvents [main] - Removing table pio_event:events_46...
+2016-11-01 10:33:40,037 INFO  io.prediction.tools.console.App$ [main] - Removed Event Store for this app ID: 46
+2016-11-01 10:33:40,057 INFO  io.prediction.tools.console.App$ [main] - Removed access key _b1VCNkX9rek7p3dizHM2VToEe9Nn1eICQkeg6vJmcnAyfHCu5a-um_i4afb3tYr
+2016-11-01 10:33:40,058 INFO  io.prediction.tools.console.App$ [main] - Deleted app mijeong.
+2016-11-01 10:33:40,059 INFO  io.prediction.tools.console.App$ [main] - Done.

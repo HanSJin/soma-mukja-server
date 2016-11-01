@@ -13,8 +13,8 @@ var eventsUrl= process.env.PIOEventUrl || 'http://52.192.137.69';
 var eventsPort= process.env.PIOEventPort || '7070';
 var queryUrl= process.env.PIOQueryUrl || 'https://52.192.137.69';
 var queryPort =  process.env.PIOQueryPort ||'8000';
-var appID= parseInt(process.env.PIOAppID || 34);
-var accessKey=process.env.PIOAccessKey || 'vje-u-ykRRXrXHb5gLmN7hwbUjrbGScPG-e64AL7Qkq2h8cVRQKQ1-ubH_kIqrao';
+var appID= parseInt(process.env.PIOAppID || 45);
+var accessKey=process.env.PIOAccessKey || 'uQNzljan3dJndKZABquGkxejxbJWSLJWqREQC9ZvG89MtoAqc6JHGTLkASFLSYrj';
 
 var client = new predictionio.Events({
                         url:eventsUrl,
@@ -22,6 +22,13 @@ var client = new predictionio.Events({
                         accessKey:accessKey,
                         strictSSL:false
                 });
+    
+    // Returns the server status
+client.status().
+    then(function(status) {
+        console.log(status); // Prints "{status: 'alive'}"
+    });
+                
 var pio = new predictionio.Engine({
                         url: queryUrl,
                         strictSSL:false
@@ -231,9 +238,33 @@ exports.addFood = function(req, res) {
 			rate_distribution : list_rate
         }, function(err, food) {
 			if(err){
-				res.status(message.code(1)).json(message.json(1));    //유저 데이터 생성 성공! 코드 몇번?
+				res.status(message.code(1)).json(message.json(1));
 			}		   
-			res.send(food.ops[0]);
+			var categories = [];
+			for (var idx=0; idx<cooking.length; idx++) {
+				categories.push(cooking[idx]);
+			}
+			for (var idx=0; idx<country.length; idx++) {
+				categories.push(country[idx]);
+			}
+			for (var idx=0; idx<ingredient.length; idx++) {
+				categories.push(ingredient[idx]);
+			}
+			console.log(categories);
+            client.createItem( 
+            	{ 
+	            	iid: food.ops[0]._id ,
+	            	properties: {
+						itypes: categories
+    				},
+					eventTime: new Date().toISOString()
+	            }, function (err,result_pio) {
+                if (!err) console.log('predictionIO createItem :'+JSON.stringify(result_pio));
+            }).then(function(result) {
+				res.send(food.ops[0]);
+            }).catch(function(err) {
+		        console.error(err); // Something went wrong 
+		    });
         });
     });
 }
@@ -259,7 +290,7 @@ exports.like = function(req, res) {
 		var temp_like_person = food.like_person;
 		
 		var now = new Date();
-		now.setHours(now.getHours()+9);
+		now.setHours(now.getHours());
 
 		
 		var isliked = false;
@@ -279,7 +310,7 @@ exports.like = function(req, res) {
 			new_like_person.push({user_id:req.params.uid,like_date_:now});
 			
 			client.createAction({
-		        event: 'buy',
+		        event: 'like',
 		        uid: req.params.uid,
 		        iid: req.params.food_id,
 		        eventTime: new Date().toISOString()
@@ -303,12 +334,12 @@ exports.like = function(req, res) {
 // SMAPLE
 exports.foodBuy = function(req, res) {
 	client.createAction({
-        event: 'buy',
+        event: 'like',
         uid: req.params.uid,
         iid: req.params.food_id,
         eventTime: new Date().toISOString()
     });
-    res(0);
+    return res.status(message.code(0)).json(message.json(0));
 };
 exports.foodViewTest = function(req, res) {
 	client.createAction({
@@ -317,8 +348,9 @@ exports.foodViewTest = function(req, res) {
         iid: req.params.food_id,
         eventTime: new Date().toISOString()
     });
-    res(0);
+    return res.status(message.code(0)).json(message.json(0));
 };
+
 exports.foodRecommandTest = function(req, res) {
 	pio.sendQuery({user : req.params.uid, num: 300}, function (err, result) {
         if (err) {
@@ -373,7 +405,7 @@ exports.rate = function(req, res) {
 		var new_rate_distribution = food.rate_distribution;
 		
 		var now = new Date();
-		now.setHours(now.getHours()+9);
+		now.setHours(now.getHours());
 
 		
 		var israted = false;
@@ -402,8 +434,7 @@ exports.rate = function(req, res) {
 				);
 		    });
 		}
-		
-		
+
 		
 		old_rate_person.push({user_id:temp.user_id, rate_num:temp.rate_num, rate_date : now});
 		
@@ -412,19 +443,30 @@ exports.rate = function(req, res) {
 				
 		db.collection('food').update( 
 			{ _id: ObjectId(req.params.food_id) }, 
-			{ $set: {rate_cnt : new_rate_cnt, rate_person : old_rate_person, rate_distribution : new_rate_distribution} },
-			function(err, update) {
-				db.collection('food').findOne( { _id : ObjectId(req.params.food_id) }, function(err,update_food){
-					if (err) res.status(message.code(1)).json(message.json(1));
-					if (!update_food) res.status(message.code(1)).json(message.json(1));
-					return res.status(message.code(0)).json(update_food);
-				});
+			{ $set: {rate_cnt : new_rate_cnt, rate_person : old_rate_person, rate_distribution : new_rate_distribution} }
+			, function(err, update) {
+				client.createAction({
+			        event: 'rate',
+			        uid: req.params.uid,
+			        iid: req.params.food_id,
+	            	properties: {
+						rating: old_rate_person[0].rate_num
+    				},
+			        eventTime: new Date().toISOString() 
+			    }).then(function(result) {
+					db.collection('food').findOne( { _id : ObjectId(req.params.food_id) }, function(err,update_food){
+						if (err) res.status(message.code(1)).json(message.json(1));
+						if (!update_food) res.status(message.code(1)).json(message.json(1));
+						return res.status(message.code(0)).json(update_food);
+					});
+			    }).
+			    catch(function(err) {
+			        console.error(err); // Something went wrong 
+			    });
 			}
 		);	
-		
     });
-    
-    };
+};
 
 
 exports.likePersons = function(req, res) {
@@ -510,16 +552,12 @@ exports.foodImageUpload = function(req, res){
 
 
 exports.recommandFoodResult = function(req,res){
-// 	db.collection('food').findOne( { _id : ObjectId(req.params.food_id) }, function(err, food){
-		pio.sendQuery({user : req.params.uid, num: 10}, function (err, result) {
-            if (err) {
-                console.log(err);
-	            return res.status(message.code(5)).json(message.json(5));
-	        }
-            else return res.status(message.code(0)).json(result.itemScores);
-        });
-        
-        
-//     });
+	pio.sendQuery({user : req.params.uid, num: 10}, function (err, result) {
+        if (err) {
+            console.log(err);
+            return res.status(message.code(5)).json(message.json(5));
+        }
+        else return res.status(message.code(0)).json(result.itemScores);
+    });
 };
 
