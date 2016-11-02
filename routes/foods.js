@@ -72,19 +72,40 @@ exports.getRecommand = function(req, res) {
 	var cooking_cnt = req.body.cooking.length;
 		
 	if(taste_cnt+country_cnt+cooking_cnt == 0){	
-	    db.collection('food').find().limit(10).skip((req.params.page-1)*10).toArray(function(err, newfeeds) {
-			return res.status(message.code(0)).json(newfeeds);
+		var recommanded_food_list = [];
+		var list_food = new Array();
+			
+		pio.sendQuery({user : req.params.uid, num: 300})
+		.then( function (result) {
+	    	if(result){
+	    		for(var i=0;i<result.itemScores.length;i++){
+		    		list_food[i] = ObjectId(result.itemScores[i].item);
+		    		console.log("list_food[i] : " + list_food[i]);
+    			}
+				recommanded_food_list.push({ _id : { $in: list_food}});
+				
+				//console.log("recommanded_food_list : " + JSON.stringify(recommanded_food_list[0]));
+	
+				db.collection('food').find({$or:recommanded_food_list}).
+				limit(10).skip((req.params.page-1)*10).toArray(function(err, newfeeds) {
+				    if(err){
+					    console.log(err);
+				    	return res.status(message.code(0)).json(newfeeds);
+				    }
+				    //console.log(newfeeds);
+					return res.status(message.code(0)).json(newfeeds);
+				});
+			}
 		});	
-    }else{
+	}else{//카테고리 검색옵션 선택안했을 때
 	    var index = 0;
-		var main = new Array();
 		if(req.body.taste.length > 0){
 			var list = new Array();
 			for (var idx=0; idx<req.body.taste.length; idx++) {
 				list[idx] = req.body.taste[idx];
 			}
 			main[index++] = { taste : { $in: list } };
-	    }
+    	}
 		if(req.body.country.length > 0){	    	var list = new Array();
 			for (var idx=0; idx<req.body.country.length; idx++) {
 				list[idx] = req.body.country[idx];
@@ -97,12 +118,12 @@ exports.getRecommand = function(req, res) {
 			}
 			main[index++] = { cooking : { $in: list } };
 	    }
-		
+	    			
 	    if(taste_cnt+country_cnt+cooking_cnt == 1){
 		    db.collection('food').find({$or: main})
 		    	.sort({ create_date : -1 }).limit(10)
 		    	.skip((req.params.page-1)*10)
-		    	.toArray(function(err, newfeeds) {						
+		    	.toArray(function(err, newfeeds) {				
 				    return res.status(message.code(0)).json(newfeeds);
 	    	});	
 	    }else{
@@ -112,8 +133,10 @@ exports.getRecommand = function(req, res) {
 		  		.toArray(function(err, newfeeds) {				
 			  		return res.status(message.code(0)).json(newfeeds);
 	    	});	
-	    }
+		}
 	}
+	  	
+	 
 };
 
 
@@ -241,14 +264,14 @@ exports.addFood = function(req, res) {
 				res.status(message.code(1)).json(message.json(1));
 			}		   
 			var categories = [];
+			for (var idx=0; idx<taste.length; idx++) {
+				categories.push(taste[idx]);
+			}
 			for (var idx=0; idx<cooking.length; idx++) {
 				categories.push(cooking[idx]);
 			}
 			for (var idx=0; idx<country.length; idx++) {
 				categories.push(country[idx]);
-			}
-			for (var idx=0; idx<ingredient.length; idx++) {
-				categories.push(ingredient[idx]);
 			}
 			console.log(categories);
             client.createItem( 
@@ -300,6 +323,12 @@ exports.like = function(req, res) {
 				isliked = true;
 				new_like_cnt--;
 				new_like_person.splice(idx, 1);
+				client.createAction({
+			        event: 'cancel_like',
+			        uid: req.params.uid,
+			        iid: req.params.food_id,
+			        eventTime: new Date().toISOString()
+			    });
 				break;
 			}
 		}
@@ -352,13 +381,30 @@ exports.foodViewTest = function(req, res) {
 };
 
 exports.foodRecommandTest = function(req, res) {
+	/*
 	pio.sendQuery({user : req.params.uid, num: 300}, function (err, result) {
         if (err) {
             console.log(err);
             return res.status(message.code(5)).json(message.json(5));
         }
-        else return res.status(message.code(0)).json(result.itemScores);
+        
+        else {
+	        //console.log(result.itemScores[0].item);
+	        console.log("result : " + result.itemScores.length);
+	        return res.status(message.code(0)).json(result.itemScores);
+	    }
     });
+    */
+    
+    pio.sendQuery({user : req.params.uid, num: 300})
+	.then( function (result) {
+    	if(result)
+	    	return res.status(message.code(0)).json(result.itemScores);
+        	
+        else
+            return res.status(message.code(5)).json(message.json(5));
+  	});
+   
 };
 
         
