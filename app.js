@@ -115,6 +115,30 @@ app.get('/users/:uid/myinfo', user.myInfo);
 
 
 app.post('/user/withdrawal', user.withdrawalUser);
+
+// 탭 2 친구 요청 가져오기 //너가 친구 요청 //friends_NonFacebook_Waiting
+app.get('/requests/waiting/:uid/:page', user.getRequests);
+
+// 탭 2 친구 요청 가져오기 2 //내가 친구 요청 //friends_NonFacebook_Requested
+app.get('/requests/requested/:uid/:page', user.getRequests2);
+
+// 탭 2 친구 요청 가져오기 3 //우린 이미 친구 //friends_NonFacebook
+app.get('/requests/friends/:uid/:page', user.getRequests3);
+
+// 유저 - 친구 요청 처리하기(accept)
+app.post('/friends/accept/:me_id/:you_id', user.acceptYou);
+
+// 유저 - 친구 요청 처리하기(reject)
+app.post('/friends/reject/:me_id/:you_id', user.rejectYou);
+
+
+
+
+
+
+
+
+
  
 // 개인정보 취급방침
 app.get('/privacy_rule', function (req, res) { 
@@ -150,6 +174,13 @@ app.get('/food/recommand/:uid', foods.foodRecommandTest);
 
 app.get('/food/:uid/recommand', foods.recommandFoodResult);
 
+app.post('/food/comment/:food_id', foods.commentFood);
+
+app.get('/food/comment/get/:food_id', foods.getCommentFood);
+
+app.get('/food/comment/get/:food_id/:comment_id', foods.getOneCommentFood);
+
+app.post('/food/comment/:food_id/:comment_id', foods.oneCommentFood);
 
 
 

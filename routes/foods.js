@@ -7,6 +7,7 @@ fs = require('fs');
 var ObjectId = require('mongodb').ObjectID;
 var multer = require('multer');
 var multiparty = require('multiparty');
+var uuid = require('node-uuid');
 
 // predicitonio
 var eventsUrl= process.env.PIOEventUrl || 'http://52.192.137.69';
@@ -40,6 +41,8 @@ var Server = mongo.Server,
  
 var server = new Server('localhost', 27017, {auto_reconnect: true});
 db = new Db('mukja', server);
+
+var db_food = db.collection('food');
  
 db.open(function(err, db) {
     if(!err) {
@@ -186,50 +189,6 @@ exports.rankList = function(req, res) {
 		return res.status(message.code(0)).json(newfeeds);
     });
 };
-/*
-
-
-exports.rankPost = function(req, res) {
-	if (!req.params.uid || !req.params.food_id || !req.params.rate)
-		return res.status(message.code(3)).json(message.json(3));
-		
-	db.collection('food').findOne( { _id : ObjectId(req.params.food_id) }, function(err,food){
-		if (err) res.status(message.code(1)).json(message.json(1));
-		if (!food) res.status(message.code(1)).json(message.json(1));
-		
-		var new_rate_cnt = food.rate_cnt;
-		var new_rate_person = food.rate_person;
-		var new_rate_distribution = food.rate_distribution;
-		
-		var isranked = false;
-		var rank_cnt = 0;
-		for (var idx=0; idx<new_rate_person.length; idx++) {
-			if (new_rate_person[idx].user_id == req.params.uid) {
-				isranked = true;
-			}
-		}
-		if (!isranked) {
-			new_rate_person.push({user_id:req.params.uid, rate_num:req.});
-			new_rate_distribution.push(req.params.rate);
-			new_rate_cnt++;
-		}
-		
-		db.collection('food').update( 
-			{ _id: ObjectId(req.params.food_id) }, 
-			{ $set: {rate_cnt : new_rate_cnt, rate_person : new_rate_person, rate_distribution : new_rate_distribution} },
-			function(err, update) {
-				db.collection('food').findOne( { _id : ObjectId(req.params.food_id) }, function(err,update_food){
-					if (err) res.status(message.code(1)).json(message.json(1));
-					if (!update_food) res.status(message.code(1)).json(message.json(1));
-					return res.status(message.code(0)).json(update_food);
-				});
-			}
-		);	
-	});
-};
-*/
-
- 
 exports.addFood = function(req, res) {
 	var now = new Date();
 	var name = req.body.name;
@@ -258,7 +217,9 @@ exports.addFood = function(req, res) {
 			rate_cnt : 0,
 			rate_person : list,
 			author : author,
-			rate_distribution : list_rate
+			rate_distribution : list_rate,
+			comment_cnt : 0,
+			comment_person : list
         }, function(err, food) {
 			if(err){
 				res.status(message.code(1)).json(message.json(1));
@@ -588,8 +549,8 @@ exports.foodImageUpload = function(req, res){
 		{ $set: {image_url : req.file.filename} },
 		function(err, update) {
 			db.collection('food').findOne( { _id : ObjectId(req.params.food_id) }, function(err,update_food){
-				if (err) res.status(message.code(1)).json(message.json(1));
-				if (!update_food) res.status(message.code(1)).json(message.json(1));
+				if (err) return res.status(message.code(1)).json(message.json(1));
+				if (!update_food) return res.status(message.code(1)).json(message.json(1));
 				return res.status(message.code(0)).json(update_food);
 			});
 		}
@@ -606,4 +567,124 @@ exports.recommandFoodResult = function(req,res){
         else return res.status(message.code(0)).json(result.itemScores);
     });
 };
+
+
+exports.commentFood = function(req, res){
+	if(!req.params.food_id)
+		return res.status(message.code(3)).json(message.json(3));
+
+	db_food.findOne({_id:ObjectId(req.params.food_id)}, function(err, food){
+		if(err) console.log("err : " + err);
+
+		var new_comment_person = food.comment_person;
+		var new_comment_cnt = food.comment_cnt + 1;
+		var now = new Date();
+		var list = new Array();
+
+		new_comment_person.push(
+			{
+				comment_id:uuid(now),
+				user_id:req.body.me_id,
+				user_name: req.body.me_name,
+				comment:req.body.comment,
+				comment_date:now,
+				user_pic_small: req.body.me_pic_small,
+				re_comment_person: list
+			}
+		);
+
+
+		db_food.update({_id:ObjectId(req.params.food_id)}, {$set:{comment_person: new_comment_person, comment_cnt:new_comment_cnt}}
+			,function(err, update){
+				if(err) {
+					console.log("err : " + err);
+					return res.status(message.code(1)).json(message.json(1));
+				}
+				else if(!update){
+					console.log("!update : " + update);
+					return res.status(message.code(1)).json(message.json(1));
+				}
+				return res.status(message.code(0)).json(message.json(0));
+			}
+		);
+	});
+
+
+}
+
+
+exports.getCommentFood = function(req, res){
+	if(!req.params.food_id)
+		return res.status(message.code(3)).json(message.json(3));
+
+	db_food.findOne({_id:ObjectId(req.params.food_id)}, function(err, food){
+		return res.status(message.code(0)).json(food.comment_person);
+	});
+
+
+}
+
+
+exports.getOneCommentFood = function(req, res){
+	if(!req.params.food_id || !req.params.comment_id )
+		return res.status(message.code(3)).json(message.json(3));
+
+	db_food.findOne({_id:ObjectId(req.params.food_id)}, function(err, food){
+		var new_comment_person = food.comment_person;
+		var new_comment_person_one = new Array();
+
+		for(var i=0;i<new_comment_person.length;i++) {
+			if (new_comment_person[i].comment_id == req.params.comment_id) {
+				console.log(i);
+				new_comment_person_one.push(new_comment_person[i])
+			}
+		}
+
+		for(var i=0;i<new_comment_person_one.length;i++)
+			console.log(i + " : " + new_comment_person_one[i]);
+		return res.status(message.code(0)).json(new_comment_person_one);
+	});
+}
+
+
+exports.oneCommentFood= function(req, res){
+	if(!req.params.food_id && !req.params.comment_id)
+		return res.status(message.code(3)).json(message.json(3));
+
+	console.log("makejin2");
+	db_food.findOne({_id:ObjectId(req.params.food_id)}, function(err, food){
+		if(err) console.log("err : " + err);
+
+		var now = new Date();
+		var new_comment_person = food.comment_person;
+
+		for(var i=0;i<food.comment_person.length;i++)
+			if(new_comment_person[i].comment_id == req.params.comment_id)
+				new_comment_person[i].re_comment_person.push(
+					{
+						user_id: req.body.me_id,
+						user_name: req.body.me_name,
+						comment: req.body.comment,
+						comment_date: now,
+						user_pic_small: req.body.me_pic_small
+					}
+				);
+
+		db_food.update({_id:ObjectId(req.params.food_id)}, {$set:{comment_person: new_comment_person}}
+			,function(err, update){
+				if(err) {
+					console.log("err : " + err);
+					return res.status(message.code(1)).json(message.json(1));
+				}
+				else if(!update){
+					console.log("!update : " + update);
+					return res.status(message.code(1)).json(message.json(1));
+				}
+				return res.status(message.code(0)).json(message.json(0));
+			}
+		);
+	});
+
+
+}
 
