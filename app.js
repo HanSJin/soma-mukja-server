@@ -182,8 +182,6 @@ app.get('/food/comment/get/:food_id/:comment_id', foods.getOneCommentFood);
 
 app.post('/food/comment/:food_id/:comment_id', foods.oneCommentFood);
 
-
-
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {
   var err = new Error('Not Found');

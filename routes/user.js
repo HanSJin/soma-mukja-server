@@ -170,7 +170,7 @@ exports.signUp = function(req, res) {
 					thumbnail_url_small : "http://graph.facebook.com/"+req.body.social_id+"/picture?type=small",
 					nickname : req.body.nickname,
 					about_me : req.body.about_me,
-					age : req.body.age,
+					birthday : req.body.birthday,
 					gender : req.body.gender, 
 					job : req.body.job,
 					location : req.body.location,
@@ -182,7 +182,8 @@ exports.signUp = function(req, res) {
 					friends_NonFacebook_Rejected: list,
 					friends_NonFacebook_Requested: list,
 					choice_cnt:0,
-					choice_last_date: now
+					choice_last_date: now,
+					location_point: req.body.location_point
 				}, function(err, user) {
 						if(!err){
 							//res.status(message.code(2)).json(message.json(2));    //유저 데이터 생성 성공! 코드 몇번?

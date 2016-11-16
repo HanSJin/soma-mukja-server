@@ -69,7 +69,12 @@ exports.getRecommand = function(req, res) {
 		
 	var category = req.body.category;
 	// NEED SOME LOGICS FOR CURATION.
-	
+
+	console.log(req.body.taste);
+	console.log(req.body.country);
+	console.log(req.body.cooking);
+
+
 	var taste_cnt = req.body.taste.length;
 	var country_cnt = req.body.country.length;
 	var cooking_cnt = req.body.cooking.length;
@@ -102,6 +107,7 @@ exports.getRecommand = function(req, res) {
 		});	
 	}else{//카테고리 검색옵션 선택안했을 때
 	    var index = 0;
+		var main = new Array();
 		if(req.body.taste.length > 0){
 			var list = new Array();
 			for (var idx=0; idx<req.body.taste.length; idx++) {
@@ -588,7 +594,7 @@ exports.commentFood = function(req, res){
 				user_name: req.body.me_name,
 				comment:req.body.comment,
 				comment_date:now,
-				user_pic_small: req.body.me_pic_small,
+				thumbnail_url_small: req.body.me_pic_small,
 				re_comment_person: list
 			}
 		);
@@ -666,18 +672,16 @@ exports.oneCommentFood= function(req, res){
 						user_name: req.body.me_name,
 						comment: req.body.comment,
 						comment_date: now,
-						user_pic_small: req.body.me_pic_small
+						thumbnail_url_small: req.body.me_pic_small
 					}
 				);
 
 		db_food.update({_id:ObjectId(req.params.food_id)}, {$set:{comment_person: new_comment_person}}
 			,function(err, update){
 				if(err) {
-					console.log("err : " + err);
 					return res.status(message.code(1)).json(message.json(1));
 				}
 				else if(!update){
-					console.log("!update : " + update);
 					return res.status(message.code(1)).json(message.json(1));
 				}
 				return res.status(message.code(0)).json(message.json(0));
@@ -687,4 +691,3 @@ exports.oneCommentFood= function(req, res){
 
 
 }
-
