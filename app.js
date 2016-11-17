@@ -131,8 +131,8 @@ app.post('/friends/accept/:me_id/:you_id', user.acceptYou);
 // 유저 - 친구 요청 처리하기(reject)
 app.post('/friends/reject/:me_id/:you_id', user.rejectYou);
 
-
-
+// 유저 - 취향 분석
+app.get('/users/:uid/analyst', user.tasteAnalyst);
 
 
 

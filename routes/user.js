@@ -33,6 +33,7 @@ var server = new Server('localhost', 27017, {auto_reconnect: true});
 db = new Db('mukja', server);
 
 var db_user = db.collection('user');
+var db_food = db.collection('food');
 
 var mongoose = require('mongoose'),
     Schema = mongoose.Schema;
@@ -626,3 +627,59 @@ exports.viewUser = function(req, res) {
 		);
 	});
 };
+
+
+exports.tasteAnalyst = function(req, res) {
+    db.collection('food').find( {
+	    like_person:{$elemMatch:{user_id:req.params.uid}}
+    }).sort({ like_date_ : -1 }).limit(30).skip(0).toArray(function(err, newfeeds) {
+	    
+	    var foodNameList = [];
+	    var tasteList = [];
+	    var countryList = [];
+	    var cookingList = [];
+	    var ingredientList = [];
+	    
+	    for (var idx=0; idx<newfeeds.length; idx++) {
+		    var mFood = newfeeds[idx];
+		    foodNameList.push(mFood.name);
+	    	for (var idx2=0; idx2<mFood.taste.length; idx2++)
+		    	tasteList.push(mFood.taste[idx2]);
+	    	for (var idx2=0; idx2<mFood.cooking.length; idx2++)
+		    	cookingList.push(mFood.cooking[idx2]);
+	    	for (var idx2=0; idx2<mFood.country.length; idx2++)
+		    	countryList.push(mFood.country[idx2]);
+	    	for (var idx2=0; idx2<mFood.ingredient.length; idx2++)
+		    	ingredientList.push(mFood.ingredient[idx2]);
+	    }
+	    var results = {
+			'food_name': foodNameList,
+			'tastes': tasteList,
+			'countries': countryList,
+			'cookings': cookingList,
+			'ingredients': ingredientList,
+			 
+		};
+		return res.status(message.code(0)).json(results);
+    });
+};
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
