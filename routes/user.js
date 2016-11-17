@@ -653,7 +653,7 @@ exports.tasteAnalyst = function(req, res) {
 		    	ingredientList.push(mFood.ingredient[idx2]);
 	    }
 	    var results = {
-			'food_name': foodNameList,
+			'food_names': foodNameList,
 			'tastes': tasteList,
 			'countries': countryList,
 			'cookings': cookingList,
