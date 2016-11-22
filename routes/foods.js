@@ -196,7 +196,8 @@ exports.rankList = function(req, res) {
     });
 };
 exports.addFood = function(req, res) {
-	var now = new Date();
+	//var now = new Date();
+	var now = req.body.update_date;
 	var name = req.body.name;
 	var taste = req.body.taste;
 	var cooking = req.body.cooking;
@@ -205,7 +206,12 @@ exports.addFood = function(req, res) {
 	var author = req.body.author;
 	var image_url = req.body.image_url;
 	var list = new Array();
-	var list_rate = [0,0,0,0,0,0,0,0,0,0];
+	var list_rate = new Array(0,0,0,0,0,0,0,0,0,0);
+	
+	var rate_person = req.body.rate_person;
+	var temp = (rate_person[0].rate_num / 0.5)-1;
+	list_rate[temp] += 1;
+
 	
     db.collection('food', function(err, collection) {
         collection.insert({
@@ -220,8 +226,8 @@ exports.addFood = function(req, res) {
 			view_cnt : 0,
 			like_cnt : 0,
 			like_person : list,
-			rate_cnt : 0,
-			rate_person : list,
+			rate_cnt : 1,
+			rate_person : rate_person,
 			author : author,
 			rate_distribution : list_rate,
 			comment_cnt : 0,
@@ -251,6 +257,18 @@ exports.addFood = function(req, res) {
 	            }, function (err,result_pio) {
                 if (!err) console.log('predictionIO createItem :'+JSON.stringify(result_pio));
             }).then(function(result) {
+	            db.collection('user').findOne( {_id: ObjectId(author.author_id)}, function(err, user){
+				    if (err) res.status(message.code(1)).json(message.json(1));
+					if (!user) res.status(message.code(1)).json(message.json(1));
+				    
+				    var new_rated_food_num = user.rated_food_num+1;
+					
+					db.collection('user').update(
+						{ _id: ObjectId(author.author_id)},
+						{ $set: {rated_food_num: new_rated_food_num}}
+					);
+			    });
+
 				res.send(food.ops[0]);
             }).catch(function(err) {
 		        console.error(err); // Something went wrong 

@@ -254,7 +254,7 @@ var dinner_message = {
 
 
 var cron = require('node-cron');
-
+//30 2
 cron.schedule('30 2 * * *', function () {
 	//한국시간으로 11시 30분
 	fcm.send(lunch_message, function(err, response){
