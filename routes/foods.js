@@ -64,7 +64,7 @@ exports.getFood = function(req, res) {
 
 
 exports.getRecommand = function(req, res) {
-	if (!req.params.uid)
+	if (!req.body.group)
 		return res.status(message.code(3)).json(message.json(3));
 		
 	var category = req.body.category;
@@ -83,7 +83,7 @@ exports.getRecommand = function(req, res) {
 		var recommanded_food_list = [];
 		var list_food = new Array();
 			
-		pio.sendQuery({user : req.params.uid, num: 300})
+		pio.sendQuery({users : req.body.group, num: 10})
 		.then( function (result) {
 	    	if(result){
 	    		for(var i=0;i<result.itemScores.length;i++){
@@ -98,10 +98,10 @@ exports.getRecommand = function(req, res) {
 				limit(10).skip((req.params.page-1)*10).toArray(function(err, newfeeds) {
 				    if(err){
 					    console.log(err);
-				    	return res.status(message.code(0)).json(newfeeds);
+				    	return res.status(message.code(0)).json({ listFood : newfeeds, algo : result.itemScores[0].algo});
 				    }
 				    //console.log(newfeeds);
-					return res.status(message.code(0)).json(newfeeds);
+					return res.status(message.code(0)).json({ listFood : newfeeds, algo : result.itemScores[0].algo});
 				});
 			}
 		});	
@@ -133,14 +133,14 @@ exports.getRecommand = function(req, res) {
 		    	.sort({ create_date : -1 }).limit(10)
 		    	.skip((req.params.page-1)*10)
 		    	.toArray(function(err, newfeeds) {				
-				    return res.status(message.code(0)).json(newfeeds);
+				    return res.status(message.code(0)).json({ listFood : newfeeds, algo : 9});
 	    	});	
 	    }else{
 		  	db.collection('food').find({$and: main})
 		  		.sort({ create_date : -1 }).limit(10)
 		  		.skip((req.params.page-1)*10)
 		  		.toArray(function(err, newfeeds) {				
-			  		return res.status(message.code(0)).json(newfeeds);
+			  		return res.status(message.code(0)).json({ listFood : newfeeds, algo : 9});
 	    	});	
 		}
 	}
@@ -612,25 +612,26 @@ exports.commentFood = function(req, res){
 				user_name: req.body.me_name,
 				comment:req.body.comment,
 				comment_date:now,
-				thumbnail_url_small: req.body.me_pic_small,
+				thumbnail_url_small: req.body.thumbnail_url,
 				re_comment_person: list
 			}
 		);
 
+		console.log("req.body.thumbnail_url : " + req.body.thumbnail_url);
 
-		db_food.update({_id:ObjectId(req.params.food_id)}, {$set:{comment_person: new_comment_person, comment_cnt:new_comment_cnt}}
-			,function(err, update){
-				if(err) {
-					console.log("err : " + err);
-					return res.status(message.code(1)).json(message.json(1));
-				}
-				else if(!update){
-					console.log("!update : " + update);
-					return res.status(message.code(1)).json(message.json(1));
-				}
-				return res.status(message.code(0)).json(message.json(0));
-			}
-		);
+
+
+		db_food.update({_id:ObjectId(req.params.food_id)}, {$set:{comment_person: new_comment_person, comment_cnt:new_comment_cnt}});
+
+		db_food.findOne({_id:ObjectId(req.params.food_id)}, function(err, food){
+			if(err) console.log("err : "+err);
+			if(!food) console.log("food : "+food);
+
+			console.log("req.params.food_id : " + food._id);
+			console.log("1 : " + food.report_cnt);
+			console.log(food.comment_person);
+			return res.status(message.code(0)).json(food.comment_person);
+		})
 	});
 
 
@@ -690,21 +691,18 @@ exports.oneCommentFood= function(req, res){
 						user_name: req.body.me_name,
 						comment: req.body.comment,
 						comment_date: now,
-						thumbnail_url_small: req.body.me_pic_small
+						thumbnail_url_small: req.body.thumbnail_url
 					}
 				);
 
-		db_food.update({_id:ObjectId(req.params.food_id)}, {$set:{comment_person: new_comment_person}}
-			,function(err, update){
-				if(err) {
-					return res.status(message.code(1)).json(message.json(1));
-				}
-				else if(!update){
-					return res.status(message.code(1)).json(message.json(1));
-				}
-				return res.status(message.code(0)).json(message.json(0));
-			}
-		);
+		db_food.update({_id:ObjectId(req.params.food_id)}, {$set:{comment_person: new_comment_person}});
+
+		db_food.findOne({_id:ObjectId(req.params.food_id)}, function(err, food){
+			if(err) console.log("err : "+err);
+			if(!food) console.log("food : "+food);
+
+			return res.status(message.code(0)).json(food.comment_person);
+		})
 	});
 
 

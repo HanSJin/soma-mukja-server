@@ -43,7 +43,7 @@ app.post('/sign/up', user.signUp);
 //  SJ
 
 // 탭 1 추천 받기
-app.post('/recommand/:uid', foods.getRecommand);
+app.post('/recommand', foods.getRecommand);
 
 // 탭 1 추천 받기
 app.get('/category', foods.getCategory);
@@ -133,6 +133,8 @@ app.post('/friends/reject/:me_id/:you_id', user.rejectYou);
 
 // 유저 - 취향 분석
 app.get('/users/:uid/analyst', user.tasteAnalyst);
+
+app.post('/sign/in/all', user.signInAll);
 
 
 
@@ -255,7 +257,7 @@ var dinner_message = {
 
 var cron = require('node-cron');
 //30 2
-cron.schedule('30 2 * * *', function () {
+cron.schedule('6 18 * * *', function () {
 	//한국시간으로 11시 30분
 	fcm.send(lunch_message, function(err, response){
 	    if (err) {

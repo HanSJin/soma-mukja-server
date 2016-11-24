@@ -667,10 +667,17 @@ exports.tasteAnalyst = function(req, res) {
 
 
 
+exports.signInAll = function(req, res){
+	console.log(req.body._id);
+	if(!req.body._id)
+		return res.status(message.code(1)).json(1);
 
-
-
-
+	db_user.findOne({_id:ObjectId(req.body._id)}, function(err, user){
+		if(!user) return res.status(message.code(1)).json(1);
+			return res.status(message.code(0)).json(user);
+		}
+	);
+}
 
 
 
